@@ -1,0 +1,4730 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>V56_Navigator Listini</title>
+  <style>
+    :root {
+      --bg: #FFFFFF;
+      --top-bar: #F5F5F5;
+      --bar: #F5F5F5;
+      --primary: #374151;
+      --accent: #16a34a;
+      --red: #DC2626;
+      --text: #1F2937;
+      --btn: #E5E7EB;
+      --btn-text: #1F2937;
+      --highlight: #d1fae5;
+      --row-even: #F3F4F6;
+      --row-hover: #E5E7EB;
+      --border-color: #E5E7EB;
+      --grid-line: #000000;
+      --font-text: Inter, "Arial Narrow", Arial, sans-serif;
+      --font-size-text: 9pt;
+      --font-price: Inter, "Arial Narrow", Arial, sans-serif;
+      --font-size-price: 9pt;
+      --icon-size: 18px;
+      --nav-sidebar-width: 25vw;
+      --row-pad-v: 6px;
+      --row-line-height: 1.35;
+    }
+
+    body.row-density-min {
+      --row-pad-v: 3px;
+      --row-line-height: 1.2;
+    }
+    body.row-density-med {
+      --row-pad-v: 6px;
+      --row-line-height: 1.35;
+    }
+    body.row-density-high {
+      --row-pad-v: 10px;
+      --row-line-height: 1.5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-text);
+      font-size: var(--font-size-text);
+      -webkit-text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    /* Overlay iniziale di caricamento */
+    .load-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 250;
+      background: var(--bar);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .load-box {
+      width: 100%;
+      max-width: 440px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 24px 20px;
+      text-align: center;
+      box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.08), -4px -4px 12px rgba(255, 255, 255, 0.9);
+    }
+    #btnLoadStart {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: var(--primary);
+      color: #FFFFFF;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.12s ease, background 0.15s ease;
+    }
+    #btnLoadStart:hover {
+      background: var(--accent);
+    }
+    #btnLoadStart:active {
+      transform: scale(0.98);
+    }
+
+    /* Struttura principale App */
+    .app {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .rotate-notice {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: #FEF3C7;
+      color: #92400E;
+      font-weight: 600;
+      font-size: calc(var(--font-size-text) - 0.5pt);
+      border-bottom: 1px solid #FDE68A;
+    }
+    .rotate-notice svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Barra superiore Desktop */
+    .desktop-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 10px;
+      background: var(--top-bar);
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+      min-height: 42px;
+    }
+
+    .desktop-top-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 0 0 auto;
+      width: var(--nav-sidebar-width);
+      min-width: 240px;
+      max-width: 65vw;
+    }
+
+    .desktop-top-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      flex: 1 1 auto;
+      flex-wrap: wrap;
+    }
+
+    .desktop-top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .app-brand-badge {
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Pulsanti icona quadrati */
+    .icon-btn,
+    .mobile-sq-btn,
+    .file-btn {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #D1D5DB;
+      border-radius: 7px;
+      background: #FFFFFF;
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      padding: 0;
+      box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.06);
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .icon-btn:hover,
+    .mobile-sq-btn:hover,
+    .file-btn:hover {
+      background: var(--highlight);
+      border-color: var(--accent);
+      color: var(--primary);
+    }
+    .icon-btn.active,
+    .mobile-sq-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #FFFFFF;
+    }
+    .icon-btn.listening,
+    .mobile-sq-btn.listening {
+      background: var(--red);
+      border-color: var(--red);
+      color: #FFFFFF;
+      animation: pulseMic 1.1s infinite;
+    }
+    @keyframes pulseMic {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    .icon-btn svg,
+    .mobile-sq-btn svg {
+      width: var(--icon-size);
+      height: var(--icon-size);
+    }
+
+    /* Casella di ricerca + Autocomplete */
+    .search-box,
+    .mob-search-slot {
+      position: relative;
+      flex: 1 1 auto;
+      min-width: 90px;
+    }
+    #search {
+      width: 100%;
+      height: 30px;
+      padding: 0 10px;
+      border: 1px solid #D1D5DB;
+      border-radius: 7px;
+      background: #FFFFFF;
+      color: var(--text);
+      font-family: var(--font-text);
+      font-size: var(--font-size-text);
+      outline: none;
+    }
+    #search:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.16);
+    }
+
+    .ac-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 3px);
+      left: 0;
+      right: 0;
+      z-index: 180;
+      background: #FFFFFF;
+      border: 1px solid #D1D5DB;
+      border-radius: 8px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .ac-dropdown.show {
+      display: block;
+    }
+    .ac-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #F3F4F6;
+    }
+    .ac-item:last-child {
+      border-bottom: none;
+    }
+    .ac-item:hover {
+      background: var(--highlight);
+    }
+    .ac-freq {
+      color: #6B7280;
+      font-size: calc(var(--font-size-text) - 1pt);
+    }
+
+    /* Contatore risultati e avviso >1500 */
+    .desktop-counter-pill,
+    .mob-counter-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      height: 30px;
+      padding: 0 8px;
+      border-radius: 7px;
+      background: #FFFFFF;
+      border: 1px solid #D1D5DB;
+      color: var(--primary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .desktop-counter-pill .totali,
+    .mob-counter-pill .totali {
+      color: #6B7280;
+    }
+
+    .over-limit-badge {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      height: 30px;
+      padding: 0 8px;
+      border-radius: 7px;
+      background: var(--red);
+      color: #FFFFFF;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Interruttori (Switch) */
+    .desktop-inline-switch-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      user-select: none;
+    }
+    .desktop-switch {
+      width: 34px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid #9CA3AF;
+      background: #D1D5DB;
+      padding: 1px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      transition: background 0.18s ease, border-color 0.18s ease;
+      flex-shrink: 0;
+    }
+    .desktop-switch .switch-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+      transform: translateX(0);
+      transition: transform 0.18s ease;
+    }
+    .desktop-switch.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .desktop-switch.active .switch-thumb {
+      transform: translateX(16px);
+    }
+    .switch-label-text {
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .switch-tooltip-wrap .switch-tooltip-box {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 160;
+      background: #1F2937;
+      color: #FFFFFF;
+      padding: 5px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      font-size: calc(var(--font-size-text) - 0.5pt);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      pointer-events: none;
+    }
+    .switch-tooltip-wrap:hover .switch-tooltip-box {
+      display: block;
+    }
+
+    /* Barre superiori Mobile */
+    .mobile-top-bars {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      padding: 6px 8px;
+      background: var(--top-bar);
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+    .mob-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+    .mob-row-1 {
+      justify-content: space-between;
+    }
+    .mob-row-1-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .mob-row-3 {
+      justify-content: space-between;
+      gap: 4px;
+    }
+    .mob-toggle-pill {
+      flex: 1 1 0;
+      height: 26px;
+      border: 1px solid #D1D5DB;
+      border-radius: 6px;
+      background: #FFFFFF;
+      color: var(--text);
+      font-family: var(--font-text);
+      font-size: calc(var(--font-size-text) - 0.5pt);
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mob-toggle-pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #FFFFFF;
+    }
+    body.hide-mob-fullscreen #btnMobFullscreen {
+      display: none !important;
+    }
+
+    .red-line {
+      height: 2px;
+      width: 100%;
+      background: var(--red);
+      flex-shrink: 0;
+    }
+
+    /* Workspace: Sidebar Navigator + Griglia principale */
+    .workspace-shell {
+      display: flex;
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .nav-fixed-tab {
+      display: none;
+      position: fixed;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 120;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      padding: 12px 6px;
+      background: var(--primary);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 0 8px 8px 0;
+      font-family: var(--font-text);
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .nav-fixed-tab.has-filters {
+      background: var(--accent);
+    }
+
+    .nav-drawer-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 130;
+      background: rgba(0, 0, 0, 0.35);
+    }
+    .nav-drawer-backdrop.show {
+      display: block;
+    }
+
+    .nav-sidebar {
+      width: var(--nav-sidebar-width);
+      min-width: 210px;
+      max-width: 65vw;
+      height: 100%;
+      background: var(--bar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+      z-index: 140;
+    }
+    .nav-sidebar.is-collapsed {
+      display: none;
+    }
+
+    .nav-sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: var(--top-bar);
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+    .nav-sidebar-title {
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .nav-sidebar-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 10px;
+      background: var(--bar);
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .nav-tree-scroll {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 6px;
+    }
+
+    .nav-node-wrap {
+      margin-bottom: 2px;
+    }
+    .nav-node-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding-left: calc(var(--depth, 0) * 12px);
+    }
+    .nav-toggle-btn {
+      width: 18px;
+      height: 18px;
+      border: 1px solid #D1D5DB;
+      border-radius: 4px;
+      background: #FFFFFF;
+      color: var(--primary);
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      padding: 0;
+    }
+    .nav-toggle-spacer {
+      width: 18px;
+      text-align: center;
+      color: #9CA3AF;
+      flex-shrink: 0;
+    }
+
+    .nav-node-chip {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 4px 7px;
+      border-radius: 6px;
+      background: var(--btn);
+      color: var(--btn-text);
+      border: 1px solid transparent;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+    }
+    .nav-node-chip:hover {
+      border-color: var(--primary);
+    }
+    .nav-node-chip.is-row-hovered {
+      outline: 2px solid var(--red);
+      background: #FEF2F2;
+      color: #111827;
+    }
+    .nav-node-chip.has-active-descendant {
+      border-color: var(--accent);
+      background: #ECFDF5;
+    }
+    .nav-node-chip.active {
+      background: var(--accent);
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+    .nav-node-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .nav-node-count {
+      opacity: 0.8;
+      font-size: calc(var(--font-size-text) - 0.5pt);
+      flex-shrink: 0;
+    }
+
+    .nav-resizer {
+      width: 5px;
+      cursor: col-resize;
+      background: transparent;
+      flex-shrink: 0;
+      transition: background 0.15s ease;
+    }
+    .nav-resizer:hover,
+    .nav-resizer.dragging {
+      background: var(--accent);
+    }
+
+    /* Griglia principale risultati */
+    .main-grid-pane {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .grid-header {
+      display: grid;
+      align-items: center;
+      padding: 6px 10px;
+      background: var(--bar);
+      border-bottom: 1px solid var(--border-color);
+      font-weight: 700;
+      color: var(--primary);
+      flex-shrink: 0;
+      user-select: none;
+      column-gap: 0px;
+      row-gap: 0px;
+    }
+    .grid-header > * {
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+    .grid-header [data-col] {
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .grid-header [data-col].active {
+      color: var(--accent);
+    }
+    .grid-header-desc-cell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .btn-nav-bar-toggle,
+    .btn-grid-sort-reset {
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 5px;
+      border: 1px solid #D1D5DB;
+      background: #FFFFFF;
+      color: var(--primary);
+      font-family: var(--font-text);
+      font-size: calc(var(--font-size-text) - 0.5pt);
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-grid-sort-reset:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+    .btn-grid-sort-reset.is-sorted {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #FFFFFF;
+    }
+
+    .scroll {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: auto;
+    }
+    .scroll::-webkit-scrollbar {
+      width: 12px;
+    }
+    .scroll::-webkit-scrollbar-track {
+      background: var(--bar);
+    }
+    .scroll::-webkit-scrollbar-thumb {
+      background: #9CA3AF;
+      border-radius: 6px;
+      border: 2px solid var(--bar);
+    }
+
+    .list-row {
+      display: grid;
+      align-items: stretch;
+      padding: 0 10px;
+      column-gap: 0px;
+      row-gap: 0px;
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      line-height: var(--row-line-height);
+    }
+    .list-row:nth-child(even) {
+      background: var(--row-even);
+    }
+    .list-row:hover {
+      background: var(--row-hover);
+    }
+
+    .list-row > div {
+      padding: var(--row-pad-v) 5px;
+      min-width: 0;
+      word-break: break-word;
+    }
+    .list-row .settore,
+    .list-row .capitolo {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .list-row .dup {
+      opacity: 0.28;
+    }
+    .list-row .cell-new {
+      border-top: 1px solid var(--grid-line);
+    }
+    .list-row .cell-bottom {
+      border-bottom: 1px solid var(--grid-line);
+    }
+    .list-row .um {
+      text-align: center;
+      white-space: nowrap;
+    }
+    .list-row .prezzo {
+      text-align: right;
+      white-space: nowrap;
+      font-family: var(--font-price);
+      font-size: var(--font-size-price);
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .list-row .prezzo .dec {
+      font-size: 0.85em;
+    }
+
+    .listino-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    .highlight {
+      background: var(--highlight);
+      border-radius: 2px;
+      padding: 0 1px;
+      font-weight: 700;
+    }
+
+    .no-results,
+    .grid-max-notice {
+      padding: 16px;
+      text-align: center;
+      color: #6B7280;
+      font-weight: 600;
+    }
+    .grid-max-notice {
+      color: var(--red);
+      background: #FEF2F2;
+      border-top: 1px solid #FECACA;
+    }
+
+    /* Pulsanti flottanti ▲ Inizio / ▼ Fine */
+    .grid-float-btn {
+      display: none;
+      position: absolute;
+      right: 18px;
+      z-index: 90;
+      padding: 5px 10px;
+      border: 1px solid #D1D5DB;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.94);
+      color: var(--primary);
+      font-family: var(--font-text);
+      font-size: calc(var(--font-size-text) - 0.5pt);
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
+    }
+    .grid-float-btn.visible {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .grid-float-top {
+      top: 40px;
+    }
+    .grid-float-bottom {
+      bottom: 12px;
+    }
+
+    /* Modali */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(0, 0, 0, 0.45);
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+    .modal.show {
+      display: flex;
+    }
+    #modal { z-index: 350; }
+    #mapModal { z-index: 380; }
+    #dupModal { z-index: 400; }
+
+    .card {
+      position: relative;
+      width: 100%;
+      max-width: 920px;
+      max-height: 92vh;
+      overflow-y: auto;
+      background: #FFFFFF;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 16px 18px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    .card-top-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .card-top-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-close {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 6px;
+      background: var(--red);
+      color: #FFFFFF;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    #colorModal > .card > .card-close,
+    #mapModal > .card > .card-close,
+    #dupModal > .card > .card-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+    }
+
+    .card-row {
+      margin-bottom: 8px;
+    }
+    .card-label {
+      display: block;
+      font-size: calc(var(--font-size-text) - 0.5pt);
+      color: #6B7280;
+      font-weight: 600;
+    }
+    .card-value {
+      font-weight: 700;
+      color: var(--text);
+    }
+    .card-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 8px;
+      padding: 8px;
+      background: var(--bar);
+      border-radius: 8px;
+    }
+    .card-divider {
+      height: 1px;
+      background: var(--border-color);
+      margin: 12px 0;
+    }
+    .detail-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 240px;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px;
+    }
+    .detail-row {
+      display: grid;
+      grid-template-columns: 95px 1fr 48px 80px;
+      gap: 6px;
+      padding: 4px 6px;
+      border-radius: 5px;
+      align-items: start;
+    }
+    .detail-row:nth-child(even) {
+      background: var(--row-even);
+    }
+    .detail-row.current {
+      background: var(--highlight);
+      font-weight: 700;
+    }
+    .detail-cod {
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .detail-um {
+      text-align: center;
+    }
+
+    .card-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .card-btns button {
+      height: 30px;
+      padding: 0 14px;
+      border: none;
+      border-radius: 7px;
+      background: var(--primary);
+      color: #FFFFFF;
+      font-family: var(--font-text);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Griglia Opzioni e Personalizzazione */
+    .options-themes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .options-theme-box,
+    .options-full-box {
+      background: var(--bar);
+      border: 1px solid #D1D5DB;
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .options-full-box {
+      grid-column: 1 / -1;
+    }
+    .options-theme-title {
+      font-weight: 800;
+      color: var(--primary);
+      border-bottom: 1px solid #D1D5DB;
+      padding-bottom: 4px;
+      margin-bottom: 2px;
+    }
+    .options-color-row {
+      display: grid;
+      grid-template-columns: 1fr 34px 72px;
+      gap: 6px;
+      align-items: center;
+    }
+    .options-color-row input[type="color"] {
+      width: 34px;
+      height: 24px;
+      padding: 0;
+      border: 1px solid #D1D5DB;
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .options-color-row input[type="text"],
+    .options-ctrl-row select,
+    .options-ctrl-row input[type="number"],
+    .preset-filter-builder select,
+    .preset-filter-builder input[type="text"] {
+      height: 26px;
+      padding: 0 6px;
+      border: 1px solid #D1D5DB;
+      border-radius: 5px;
+      background: #FFFFFF;
+      color: var(--text);
+      font-family: var(--font-text);
+      font-size: var(--font-size-text);
+    }
+    .options-ctrl-row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 6px;
+      align-items: center;
+    }
+    .options-range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .options-range-wrap input[type="range"] {
+      flex: 1 1 auto;
+    }
+    .options-range-val {
+      min-width: 38px;
+      text-align: right;
+      font-weight: 700;
+    }
+
+    .ext-listini-table-wrap {
+      overflow-x: auto;
+      background: #FFFFFF;
+      border: 1px solid #D1D5DB;
+      border-radius: 6px;
+    }
+    .ext-listini-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .ext-listini-table th {
+      background: var(--top-bar);
+      color: var(--primary);
+      text-align: left;
+      padding: 5px 6px;
+      border-bottom: 1px solid #D1D5DB;
+      white-space: nowrap;
+    }
+    .ext-listini-table td {
+      padding: 4px 5px;
+      border-bottom: 1px solid #E5E7EB;
+      vertical-align: middle;
+    }
+    .ext-listini-table tr:last-child td {
+      border-bottom: none;
+    }
+    .ext-listini-table input[type="text"] {
+      height: 26px;
+      line-height: 24px;
+      padding: 0 6px;
+      width: 100%;
+      min-width: 70px;
+    }
+    .ext-listini-table input[type="color"] {
+      width: 32px;
+      height: 24px;
+      padding: 0;
+      border: 1px solid #D1D5DB;
+      border-radius: 4px;
+      cursor: pointer;
+      background: transparent;
+    }
+    .ext-act-btn {
+      width: 24px;
+      height: 24px;
+      border: 1px solid #D1D5DB;
+      border-radius: 4px;
+      background: #FFFFFF;
+      color: var(--primary);
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ext-act-btn:hover {
+      background: #F3F4F6;
+      border-color: var(--primary);
+    }
+    .ext-act-btn.del {
+      background: var(--red);
+      color: #FFFFFF;
+      border-color: var(--red);
+    }
+    .preset-filter-builder {
+      display: grid;
+      grid-template-columns: 120px minmax(140px, 1fr) minmax(180px, 1.4fr) auto;
+      gap: 6px;
+      align-items: center;
+    }
+    @media (max-width: 820px) {
+      .preset-filter-builder {
+        grid-template-columns: 1fr;
+      }
+      .options-themes-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .preset-filters-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .preset-filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #FFFFFF;
+      border: 1px solid var(--accent);
+      color: var(--text);
+      font-size: calc(var(--font-size-text) - 0.5pt);
+      font-weight: 600;
+    }
+    .preset-filter-chip button {
+      width: 18px;
+      height: 18px;
+      border: none;
+      border-radius: 50%;
+      background: var(--red);
+      color: #FFFFFF;
+      font-weight: bold;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 10. Menu contestuale tasto destro personalizzato */
+    .custom-ctx-menu {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      min-width: 148px;
+      background: #FFFFFF;
+      border: 1px solid #D1D5DB;
+      border-radius: 8px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+      padding: 4px;
+      flex-direction: column;
+      gap: 2px;
+      user-select: none;
+    }
+    .custom-ctx-menu.show {
+      display: flex;
+    }
+    .custom-ctx-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 7px 10px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text);
+      font-family: var(--font-text);
+      font-size: var(--font-size-text);
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+    }
+    .custom-ctx-item:hover {
+      background: var(--highlight);
+      color: var(--primary);
+    }
+
+    /* Mobile Portrait & Responsive */
+    .mobile-sheet-backdrop {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .desktop-top-bar {
+        display: none;
+      }
+      .mobile-top-bars {
+        display: flex;
+      }
+      .nav-resizer {
+        display: none;
+      }
+      .grid-header {
+        display: none;
+      }
+      .card-fields-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .detail-row {
+        grid-template-columns: 75px 1fr 40px 68px;
+      }
+    }
+
+    /* Punto 8 e Punto 9: Mobile Verticale (Portrait) */
+    @media (orientation: portrait) and (max-width: 768px) {
+      .rotate-notice {
+        display: flex !important;
+        background: #7A0016;
+        color: #FFFFFF;
+        font-weight: 700;
+        font-size: calc(var(--font-size-text) + 1pt);
+        padding: 10px 12px;
+        min-height: 44px;
+        border-bottom: 1px solid #590010;
+        flex-shrink: 0;
+      }
+      .rotate-notice svg {
+        width: 18px;
+        height: 18px;
+        stroke: #FFFFFF;
+      }
+      .mobile-top-bars {
+        position: relative;
+        z-index: 160;
+      }
+      .main-grid-pane {
+        display: none !important;
+      }
+      .nav-fixed-tab,
+      .nav-drawer-backdrop,
+      #btnCloseNavSidebar {
+        display: none !important;
+      }
+      .nav-sidebar {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        bottom: auto !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        min-width: 100vw !important;
+        height: 100% !important;
+        flex: 1 1 auto !important;
+        border-right: none !important;
+        box-shadow: none !important;
+        display: flex !important;
+      }
+    }
+
+    /* Punto 10: Mobile Orizzontale (Landscape) */
+    @media (orientation: landscape) and (max-height: 540px) {
+      .rotate-notice {
+        display: none !important;
+      }
+      .desktop-top-bar {
+        display: none !important;
+      }
+      .mobile-top-bars {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        padding: 4px 8px !important;
+        width: 100% !important;
+      }
+      .mob-row-1 {
+        display: none !important;
+      }
+      .mob-row-2 {
+        display: flex !important;
+        flex: 3 1 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+        gap: 6px !important;
+      }
+      .mob-row-3 {
+        display: flex !important;
+        flex: 3 1 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+        gap: 6px !important;
+      }
+      .mob-row-2 .mob-search-slot {
+        flex: 1 1 0 !important;
+        min-width: 70px !important;
+      }
+      .mob-row-2 .mob-counter-pill {
+        flex: 1 1 0 !important;
+        justify-content: center !important;
+      }
+      .mob-row-3 .mob-toggle-pill {
+        flex: 1 1 0 !important;
+        height: 30px !important;
+      }
+      .main-grid-pane {
+        display: flex !important;
+      }
+      .grid-header {
+        display: grid !important;
+      }
+      .nav-resizer {
+        display: none !important;
+      }
+      .nav-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 48vw;
+        max-width: 340px;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
+      }
+    }
+
+    /* Stampa A4 Scheda Articolo */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #modal, #modal * {
+        visibility: visible;
+      }
+      #modal {
+        position: static;
+        background: none;
+        padding: 0;
+      }
+      .card {
+        box-shadow: none;
+        max-height: none;
+        width: 100%;
+        max-width: 100%;
+      }
+      .card-top-actions {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loadOverlay" class="load-overlay">
+    <div class="load-box">
+      <div style="font-weight:bold; font-size:calc(var(--font-size-text) + 3pt); color:var(--primary);">V56_Navigator Listini</div>
+      <div id="loadStatusMsg" style="margin:8px 0; color:#6B7280;">Seleziona uno o più file listino (JSON, XML, CSV, TSV, TXT, XLS, XLSX, RXR).</div>
+      <label for="fileInput" id="btnLoadStart" role="button" tabindex="0">Seleziona file listino</label>
+    </div>
+  </div>
+  <div class="app" id="mainApp" style="display:none;">
+    <div id="rotateNotice" class="rotate-notice" role="status" aria-live="polite">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="6" y="2" width="12" height="20" rx="2.5"/>
+        <line x1="12" y1="18" x2="12.01" y2="18"/>
+      </svg>
+      <span>Ruota schermo per visualizzazione completa</span>
+    </div>
+
+    <!-- RIGA 1 DESKTOP: Blocco A (1° quarto = 25% monitor) | Blocco B (centro) | Destra -->
+    <div class="desktop-top-bar" id="desktopTopBar">
+      <div class="desktop-top-left" id="desktopBlockA">
+        <button id="btnMic" class="icon-btn" type="button" title="Dettatura vocale (STT)" aria-label="Dettatura vocale">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="2" width="6" height="11" rx="3"/>
+            <path d="M5 10a7 7 0 0 0 14 0"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+          </svg>
+        </button>
+        <div class="search-box" id="desktopSearchSlot">
+          <input type="search" id="search" placeholder="Cerca..." enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" /><div id="acDropdown" class="ac-dropdown" role="listbox"></div>
+        </div>
+        <div class="desktop-counter-pill" id="desktopCounterPill">
+          <span>✔</span>
+          <strong class="result-count" id="resultCount">0</strong>
+          <span class="totali" id="totaliCount">/0</span>
+        </div>
+        <div class="over-limit-badge" id="desktopOverLimitBadge" role="alert">Migliora la Ricerca: oltre 1500 articoli trovati !!!</div>
+
+      </div>
+
+      <div class="desktop-top-center" id="desktopBlockB">
+        <div class="desktop-inline-switch-item switch-tooltip-wrap">
+          <button id="btnTurbo" class="desktop-switch active" type="button" role="switch" aria-checked="true"><span class="switch-thumb"></span></button>
+          <span class="switch-label-text">TurboRicerca</span>
+          <span class="switch-tooltip-box">Risolve: singoli/plurali, accenti, doppie ...</span>
+        </div>
+        <div class="desktop-inline-switch-item switch-tooltip-wrap">
+          <button id="btnOr" class="desktop-switch" type="button" role="switch" aria-checked="false"><span class="switch-thumb"></span></button>
+          <span class="switch-label-text">Almeno 1 parola</span>
+          <span class="switch-tooltip-box">Cerca articoli con almeno una parola di quelle scritte (esempio: calcestruzzo cls)</span>
+        </div>
+        <div class="desktop-inline-switch-item switch-tooltip-wrap">
+          <button id="btnEstesa" class="desktop-switch" type="button" role="switch" aria-checked="false"><span class="switch-thumb"></span></button>
+          <span class="switch-label-text">Des. Estesa</span>
+          <span class="switch-tooltip-box">Cerca anche nel campo contenente descrizioni dettagliate</span>
+        </div>
+      </div>
+
+      <div class="desktop-top-right">
+        <span class="app-brand-badge">V56_Navigator Listini</span>
+        <select id="topRowDensity" aria-label="Altezza riga" style="height:28px; line-height:26px; padding:0 6px;">
+          <option value="min">Righe compatte</option>
+          <option value="med" selected>Righe medie</option>
+          <option value="high">Righe larghe</option>
+        </select>
+        <button id="btnDesktopSettings" class="icon-btn" type="button" title="Opzioni e file" aria-label="Opzioni e file">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+        <button id="btnFullscreen" class="icon-btn" type="button" title="Schermo intero" aria-label="Schermo intero">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"/>
+            <polyline points="9 21 3 21 3 15"/>
+            <line x1="21" y1="3" x2="14" y2="10"/>
+            <line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- BARRE MOBILE -->
+    <div class="mobile-top-bars" id="mobileTopBars">
+      <div class="mob-row mob-row-1">
+        <span class="app-brand-badge">V56_Navigator Listini</span>
+        <div class="mob-row-1-actions">
+          <button id="btnMobSettings" class="mobile-sq-btn" type="button" title="Opzioni" aria-label="Opzioni">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+          <button id="btnMobFullscreen" class="mobile-sq-btn" type="button" title="Schermo intero" aria-label="Schermo intero">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"/>
+              <polyline points="9 21 3 21 3 15"/>
+              <line x1="21" y1="3" x2="14" y2="10"/>
+              <line x1="3" y1="21" x2="10" y2="14"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="mob-row mob-row-2">
+        <button id="btnMobMic" class="mobile-sq-btn" type="button" title="Dettatura vocale (STT)" aria-label="Dettatura vocale">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="2" width="6" height="11" rx="3"/>
+            <path d="M5 10a7 7 0 0 0 14 0"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+          </svg>
+        </button>
+        <div class="mob-search-slot" id="mobSearchSlot"></div>
+        <div class="mob-counter-pill" id="mobCounterPill">
+          <span>✔</span>
+          <strong class="result-count" id="mobResultCount">0</strong>
+          <span class="totali" id="mobTotaliCount">/0</span>
+        </div>
+        <div class="over-limit-badge" id="mobOverLimitBadge" role="alert">Migliora la Ricerca: oltre 1500 articoli trovati !!!</div>
+      </div>
+      <div class="mob-row mob-row-3">
+        <button id="btnMobileTurbo" class="mob-toggle-pill active" type="button" title="Risolve: singoli/plurali, accenti, doppie ...">TurboRicerca</button>
+        <button id="btnMobileOr" class="mob-toggle-pill" type="button" title="Cerca articoli con almeno una parola di quelle scritte (esempio: calcestruzzo cls)">Almeno 1 parola</button>
+        <button id="btnMobileEstesa" class="mob-toggle-pill" type="button" title="Cerca anche nel campo contenente descrizioni dettagliate">Des. Estesa</button>
+      </div>
+
+    </div>
+
+    <input type="file" id="fileInput" accept=".json,.xml,.csv,.tsv,.txt,.xls,.xlsx,.rxr" multiple />
+    <div class="red-line"></div>
+
+    <button id="btnNavFixedTab" class="nav-fixed-tab" type="button" title="Apri/Chiudi Navigazione listino" aria-label="Navigazione listino">
+      <span>Navigazione listino</span>
+    </button>
+    <div id="navDrawerBackdrop" class="nav-drawer-backdrop"></div>
+
+    <div class="workspace-shell" id="workspaceShell">
+      <aside class="nav-sidebar" id="navSidebar" aria-label="Navigazione listino">
+        <div class="nav-sidebar-header">
+          <span class="nav-sidebar-title">Navigazione listino</span>
+          <button id="btnCloseNavSidebar" class="icon-btn" type="button" style="width:26px; height:26px;" title="Nascondi barra navigazione" aria-label="Nascondi barra navigazione">◀</button>
+        </div>
+        <div class="nav-sidebar-actions">
+          <div class="desktop-inline-switch-item" title="Attiva o disattiva i filtri personali predefiniti">
+            <button id="btnCustomPresetFilters" class="desktop-switch" type="button" role="switch" aria-checked="false" disabled><span class="switch-thumb"></span></button>
+            <span class="switch-label-text" id="lblCustomPresetFilters" style="cursor:pointer; font-weight:700; color:var(--primary);">Filtri Personali</span>
+          </div>
+          <div class="desktop-inline-switch-item" title="Azzera tutti i filtri attivi (inclusi i Filtri Personali)">
+            <button id="btnClearFilters" class="desktop-switch active" type="button" role="switch" aria-checked="true"><span class="switch-thumb"></span></button>
+            <span class="switch-label-text" id="lblClearFilters" style="cursor:pointer; font-weight:700; color:var(--primary);">Azzera Filtri</span>
+          </div>
+        </div>
+        <div class="nav-tree-scroll" id="navTreeContainer" role="tree"></div>
+      </aside>
+      <div class="nav-resizer" id="navResizer" title="Trascina orizzontalmente per ridimensionare la larghezza (doppio clic per ripristinare 25%)"></div>
+
+      <div class="main-grid-pane">
+        <div class="grid-header">
+          <span data-sort="listino">Ordine listino</span>
+          <span></span>
+          <span id="priceSort" data-sort="price">Prezzo ↓</span>
+        </div>
+        <button type="button" id="btnGridFloatTop" class="grid-float-btn grid-float-top" title="Vai all'inizio della griglia" aria-label="Inizio griglia">▲ Inizio</button>
+        <div id="content" class="scroll"></div>
+        <button type="button" id="btnGridFloatBottom" class="grid-float-btn grid-float-bottom" title="Vai alla fine della griglia" aria-label="Fine griglia">▼ Fine</button>
+      </div>
+    </div>
+  </div>
+  <div class="mobile-sheet-backdrop" id="mobileCategorySheet" aria-hidden="true">
+    <section class="mobile-sheet" role="dialog" aria-modal="true" aria-label="Selezione categorie">
+      <div class="sheet-grabber"></div>
+      <div class="sheet-head"><strong>Esplora il listino</strong><button class="sheet-close" id="btnCloseMobileSheet" aria-label="Chiudi">×</button></div>
+      <div class="sheet-crumb" id="mobileBreadcrumb">Seleziona progressivamente il percorso delle categorie.</div>
+      <div class="sheet-steps" id="mobileSteps"></div>
+      <div class="sheet-search"><input id="mobileCategorySearch" type="text" placeholder="Filtra le categorie..." autocomplete="off"></div>
+      <div class="sheet-options" id="mobileCategoryOptions"></div>
+      <div class="sheet-footer">
+        <button id="btnMobileReset">Azzera</button>
+        <button class="confirm" id="btnMobileApply">Mostra articoli</button>
+      </div>
+    </section>
+  </div>
+  <div id="modal" class="modal">
+    <div class="card" id="cardContent"></div>
+  </div>
+  <div id="mapModal" class="modal">
+    <div class="card" style="max-width:520px;">
+      <button class="card-close" id="btnCloseMap">×</button>
+      <h3>Mappatura colonne listino</h3>
+      <div id="mapInfoText" style="color:#6B7280; margin-bottom:8px;">Associa le colonne del file ai campi dell'app:</div>
+      <div id="mapFieldsGrid" style="display:grid; grid-template-columns:120px 1fr; gap:6px; align-items:center;"></div>
+      <div id="mapPreviewBox" style="margin-top:10px; padding:6px; background:var(--bar); border-radius:4px; font-size:calc(var(--font-size-text) - 0.5pt); max-height:110px; overflow:auto;"></div>
+      <div class="card-btns" style="margin-top:10px;">
+        <button id="btnConfirmMap">Importa con mappatura</button>
+        <button id="btnCancelMap" style="background:#E5E7EB; color:#374151;">Annulla</button>
+      </div>
+    </div>
+  </div>
+  <div id="dupModal" class="modal">
+    <div class="card" style="max-width:440px;">
+      <button class="card-close" id="btnCloseDup">×</button>
+      <h3>Listino già presente</h3>
+      <div id="dupInfoText" style="color:var(--text); line-height:1.45; margin-bottom:10px;"></div>
+      <div class="card-btns">
+        <button id="btnOverwriteDup">Sovrascrivi listino</button>
+        <button id="btnKeepDup" style="background:#E5E7EB; color:#374151;">Mantieni precedente</button>
+      </div>
+    </div>
+  </div>
+  <div id="colorModal" class="modal">
+    <div class="card">
+      <button class="card-close" id="btnCloseColor">×</button>
+      <h3 id="appTitle">V56_Navigator Listini — Opzioni e Personalizzazione</h3>
+      <div id="optionsFileBar" style="display:flex; flex-direction:column; gap:6px; padding:8px 10px; margin:6px 0 10px; background:var(--bar); border:1px solid #D1D5DB; border-radius:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button id="btnOptionsOpenFile" class="file-btn" type="button" title="Aggiungi o aggiorna file listino" style="width:30px; height:30px;">📁</button>
+          <span class="listino-name" id="listinoName" style="font-weight:bold;">Nessun listino caricato</span>
+        </div>
+        <div id="loadedListiniBox" style="display:flex; flex-direction:column; gap:4px;"></div>
+        <details style="margin-top:4px; border-top:1px solid #D1D5DB; padding-top:4px; font-size:calc(var(--font-size-text) - 0.5pt); color:#4B5563;">
+          <summary style="cursor:pointer; font-weight:600; color:var(--primary); user-select:none;">Etichette colonna ufficiali riconosciute (CSV/XLS/XML)</summary>
+          <div style="margin-top:4px; line-height:1.4; background:#FFFFFF; padding:6px 8px; border-radius:4px; border:1px solid #E5E7EB;">
+            <div><strong>Codice:</strong> <code>codice</code>, <code>cod</code>, <code>articolo</code>, <code>cod_art</code>, <code>codice_articolo</code>, <code>voce</code>, <code>id</code>, <code>cod_voce</code></div>
+            <div><strong>Descrizione *:</strong> <code>descrizione</code>, <code>testo</code>, <code>desc_voce</code>, <code>oggetto</code>, <code>denominazione</code>, <code>articolo_desc</code>, <code>desc</code></div>
+            <div><strong>Unità misura:</strong> <code>um</code>, <code>umi</code>, <code>unita</code>, <code>unita_misura</code>, <code>unita_di_misura</code>, <code>u_m</code></div>
+            <div><strong>Prezzo *:</strong> <code>prezzo</code>, <code>val</code>, <code>importo</code>, <code>prezzo_unitario</code>, <code>tariffa</code>, <code>euro</code>, <code>costo</code>, <code>prezzo_euro</code></div>
+            <div><strong>% Manodopera:</strong> <code>man</code>, <code>manodopera</code>, <code>incidenza_manodopera</code>, <code>mo</code>, <code>%mo</code>, <code>perc_man</code>, <code>manodopera_%</code></div>
+            <div><strong>Settore:</strong> <code>settore</code>, <code>categoria</code>, <code>macrocategoria</code>, <code>gruppo</code> (Cod: <code>settorecod</code>, <code>cod_settore</code>, <code>id_settore</code>)</div>
+            <div><strong>Capitolo:</strong> <code>capitolo</code>, <code>sottocategoria</code>, <code>famiglia</code>, <code>classe</code> (Cod: <code>capitolocod</code>, <code>cod_capitolo</code>, <code>id_capitolo</code>)</div>
+            <div><strong>Paragrafo:</strong> <code>paragrafocod</code>, <code>cod_paragrafo</code>, <code>paragrafo</code>, <code>par</code></div>
+            <div><strong>Paragrafo Sintetico:</strong> <code>sint</code>, <code>sintetica</code>, <code>desc_sintetica</code>, <code>paragrafo_sintetico</code></div>
+            <div><strong>Descrizione Estesa:</strong> <code>estesa</code>, <code>desc_estesa</code>, <code>descrizione_estesa</code>, <code>note</code>, <code>specifiche</code></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="options-themes-grid">
+        <!-- TEMA 1: COLORI INTERFACCIA E BARRE -->
+        <div class="options-theme-box">
+          <div class="options-theme-title">1. Colori Interfaccia e Barre</div>
+          <div class="options-color-row">
+            <label>Sfondo barra superiore (Riga 1)</label><input type="color" id="cTopBar" value="#F5F5F5"><input type="text" id="cTopBarHex" value="#F5F5F5">
+          </div>
+          <div class="options-color-row">
+            <label>Sfondo area filtri e intestazioni</label><input type="color" id="cBar" value="#F5F5F5"><input type="text" id="cBarHex" value="#F5F5F5">
+          </div>
+          <div class="options-color-row">
+            <label>Sfondo nodo alberatura inattivo</label><input type="color" id="cBtn" value="#E5E7EB"><input type="text" id="cBtnHex" value="#E5E7EB">
+          </div>
+          <div class="options-color-row">
+            <label>Testo nodo alberatura inattivo</label><input type="color" id="cBtnText" value="#1F2937"><input type="text" id="cBtnTextHex" value="#1F2937">
+          </div>
+          <div class="options-color-row">
+            <label>Sfondo nodo selezionato</label><input type="color" id="cAccent" value="#16a34a"><input type="text" id="cAccentHex" value="#16a34a">
+          </div>
+          <div class="options-color-row">
+            <label>Intestazioni, titoli e prezzi</label><input type="color" id="cPrimary" value="#374151"><input type="text" id="cPrimaryHex" value="#374151">
+          </div>
+          <div class="options-color-row">
+            <label>Linea rossa e avvisi</label><input type="color" id="cRed" value="#DC2626"><input type="text" id="cRedHex" value="#DC2626">
+          </div>
+        </div>
+
+        <!-- TEMA 2: COLORI GRIGLIA E RIGHE -->
+        <div class="options-theme-box">
+          <div class="options-theme-title">2. Colori Griglia e Risultati</div>
+          <div class="options-color-row">
+            <label>Sfondo principale e righe dispari</label><input type="color" id="cBg" value="#FFFFFF"><input type="text" id="cBgHex" value="#FFFFFF">
+          </div>
+          <div class="options-color-row">
+            <label>Sfondo righe tabella pari</label><input type="color" id="cRowEven" value="#F3F4F6"><input type="text" id="cRowEvenHex" value="#F3F4F6">
+          </div>
+          <div class="options-color-row">
+            <label>Sfondo riga al passaggio mouse</label><input type="color" id="cRowHover" value="#E5E7EB"><input type="text" id="cRowHoverHex" value="#E5E7EB">
+          </div>
+          <div class="options-color-row">
+            <label>Testo generale articoli</label><input type="color" id="cText" value="#1F2937"><input type="text" id="cTextHex" value="#1F2937">
+          </div>
+          <div class="options-color-row">
+            <label>Evidenziatore testo cercato</label><input type="color" id="cHighlight" value="#d1fae5"><input type="text" id="cHighlightHex" value="#d1fae5">
+          </div>
+          <div class="options-color-row">
+            <label>Bordi contenitori e riquadri</label><input type="color" id="cBorder" value="#E5E7EB"><input type="text" id="cBorderHex" value="#E5E7EB">
+          </div>
+          <div class="options-color-row">
+            <label>Linea separazione capitoli/paragrafi</label><input type="color" id="cGridLine" value="#000000"><input type="text" id="cGridLineHex" value="#000000">
+          </div>
+        </div>
+
+        <!-- TEMA 3: TIPOGRAFIA E DIMENSIONI -->
+        <div class="options-theme-box">
+          <div class="options-theme-title">3. Tipografia e Dimensioni</div>
+          <div class="options-ctrl-row">
+            <label>Font testi globale</label>
+            <select id="cFontText"><option>Inter</option><option>Arial</option><option>Arial Narrow</option><option>Verdana</option><option>Tahoma</option></select>
+          </div>
+          <div class="options-ctrl-row">
+            <label>Dim. testi globale</label>
+            <div class="options-range-wrap">
+              <input type="range" id="cSizeText" min="8" max="12" value="9">
+              <span id="cSizeTextVal" class="options-range-val">9pt</span>
+            </div>
+          </div>
+          <div class="options-ctrl-row">
+            <label>Font prezzi</label>
+            <select id="cFontPrice"><option>Inter</option><option>Arial</option><option>Arial Narrow</option><option>Verdana</option><option>Tahoma</option></select>
+          </div>
+          <div class="options-ctrl-row">
+            <label>Dim. prezzi</label>
+            <div class="options-range-wrap">
+              <input type="range" id="cSizePrice" min="8" max="12" value="9">
+              <span id="cSizePriceVal" class="options-range-val">9pt</span>
+            </div>
+          </div>
+          <div class="options-ctrl-row">
+            <label>Dim. icone</label>
+            <div class="options-range-wrap">
+              <input type="range" id="cIconSize" min="14" max="26" value="18">
+              <span id="cIconSizeVal" class="options-range-val">18px</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TEMA 4: LAYOUT E PARAMETRI RICERCA -->
+        <div class="options-theme-box">
+          <div class="options-theme-title">4. Layout e Parametri di Ricerca</div>
+          <div class="options-ctrl-row">
+            <label>Altezza riga griglia</label>
+            <select id="cRowDensity"><option value="min">Righe compatte</option><option value="med" selected>Righe medie</option><option value="high">Righe larghe</option></select>
+          </div>
+          <div class="options-ctrl-row">
+            <label>Max risultati mostrati</label>
+            <input type="number" id="cMaxResults" value="1500" min="10" max="5000">
+          </div>
+          <div class="options-ctrl-row">
+            <label>Fullscreen mobile</label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="checkbox" id="cShowMobFullscreen" checked>
+              <span>Mostra pulsante fullscreen su mobile</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- TEMA 5: LISTINI ESTERNI PREDEFINITI (CARICAMENTO PARALLELO ALL'AVVIO) -->
+        <div class="options-full-box">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+            <div class="options-theme-title" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">5. Listini Esterni Predefiniti (Caricamento parallelo all'avvio)</div>
+            <button type="button" id="btnAddExternalListino" style="height:26px; padding:0 10px; border:none; border-radius:6px; background:var(--primary); color:#FFFFFF; font-weight:700; cursor:pointer;">+ Aggiungi listino</button>
+          </div>
+          <div class="ext-listini-table-wrap">
+            <table class="ext-listini-table">
+              <thead>
+                <tr>
+                  <th style="width:46px; text-align:center;">Attivo</th>
+                  <th style="width:170px;">Nome Listino</th>
+                  <th style="width:95px;">Data</th>
+                  <th style="width:52px; text-align:center;">Colore</th>
+                  <th>URL (JSON / XML / CSV / TSV / TXT)</th>
+                  <th style="width:96px; text-align:center;">Ordine / Azioni</th>
+                </tr>
+              </thead>
+              <tbody id="externalListiniTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TEMA 6: FILTRI ATTIVI PREDEFINITI ALL'APERTURA -->
+        <div class="options-full-box">
+          <div class="options-theme-title">6. Filtri attivi predefiniti all'apertura (Voce / Codice esatto)</div>
+          <div class="preset-filter-builder">
+            <select id="presetFilterLevel" aria-label="Livello filtro predefinito">
+              <option value="listino">Listino</option>
+              <option value="settore" selected>Settore</option>
+              <option value="capitolo">Capitolo</option>
+              <option value="paragrafo">Paragrafo</option>
+            </select>
+            <input type="text" id="presetFilterSearch" placeholder="Filtra elenco voci/codici..." autocomplete="off">
+            <select id="presetFilterValue" aria-label="Valore esatto filtro predefinito"></select>
+            <button type="button" id="btnAddPresetFilter" style="height:28px; padding:0 10px; border:none; border-radius:6px; background:var(--accent); color:#FFFFFF; font-weight:700; cursor:pointer; white-space:nowrap;">+ Aggiungi filtro predefinito</button>
+          </div>
+          <div id="presetFiltersList" class="preset-filters-list"></div>
+        </div>
+      </div>
+
+      <div class="card-btns" style="margin-top:10px;">
+        <button id="btnApplyColors">Applica</button>
+        <button id="btnSaveHtmlUpdated" style="background:var(--accent); color:#FFFFFF; font-weight:700;" title="Salva tutte le impostazioni, i listini esterni e i filtri predefiniti direttamente nel file HTML scaricabile">Salva HTML aggiornato</button>
+        <button id="btnResetColors" style="background:#E5E7EB; color:#374151;">Reset</button>
+      </div>
+    </div>
+  </div>
+  <div id="customContextMenu" class="custom-ctx-menu" role="menu" aria-label="Menu rapido">
+    <button type="button" class="custom-ctx-item" id="ctxCopyBtn" role="menuitem">📋 Copia</button>
+    <button type="button" class="custom-ctx-item" id="ctxPasteBtn" role="menuitem">📥 Incolla</button>
+  </div>
+  <script id="embeddedConfig" type="application/json">{"bg": "#FFFFFF", "topBar": "#F5F5F5", "bar": "#F5F5F5", "primary": "#374151", "accent": "#16a34a", "red": "#DC2626", "text": "#1F2937", "btn": "#E5E7EB", "btnText": "#1F2937", "highlight": "#d1fae5", "rowEven": "#F3F4F6", "rowHover": "#E5E7EB", "borderColor": "#E5E7EB", "gridLine": "#000000", "fontText": "Inter", "sizeText": 9, "fontPrice": "Inter", "sizePrice": 9, "iconSize": 18, "maxResults": 1500, "rowDensity": "med", "showMobFullscreen": true, "externalListini": [{"active": true, "name": "Veneto 2026", "date": "2026", "color": "#2563EB", "url": "https://raw.githubusercontent.com/enricomarcigaglia-cmyk/progetto/main/prezzario_veneto_2026.json"}], "presetFilters": []}</script>
+  <script>
+    const APP_VERSION = 'V56_Navigator Listini';
+    const LISTINO_COLORS = ['#2563EB', '#10B981', '#F97316', '#7C3AED', '#DC2626', '#0D9488', '#DB2777', '#CA8A04'];
+    let nextListinoColorCursor = 0;
+    let loadedListini = [];
+    let expandedTreeNodes = new Set();
+    let navSidebarOpen = window.innerWidth > 700;
+    let onlySelectedTreeOn = false;
+    let sortCol = 'listino';
+    let sortDir = 'asc';
+    let externalListiniConfig = [
+      {
+        active: true,
+        name: 'Veneto 2026',
+        date: '2026',
+        color: '#2563EB',
+        url: 'https://raw.githubusercontent.com/enricomarcigaglia-cmyk/progetto/main/prezzario_veneto_2026.json'
+      }
+    ];
+    let presetFiltersConfig = [];
+    let customPresetFiltersOn = false;
+
+    function hexToHsl(hex) {
+      let c = String(hex || '').replace('#', '').trim();
+      if (c.length === 3) c = c.split('').map(ch => ch + ch).join('');
+      if (c.length !== 6) return { h: 210, s: 10, l: 85 };
+      const r = parseInt(c.slice(0, 2), 16) / 255;
+      const g = parseInt(c.slice(2, 4), 16) / 255;
+      const b = parseInt(c.slice(4, 6), 16) / 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h = 0, s = 0;
+      const l = (max + min) / 2;
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }
+
+    function hslToHex(h, s, l) {
+      const hh = ((h % 360) + 360) % 360;
+      const ss = Math.max(0, Math.min(100, s)) / 100;
+      const ll = Math.max(0, Math.min(100, l)) / 100;
+      const c = (1 - Math.abs(2 * ll - 1)) * ss;
+      const x = c * (1 - Math.abs(((hh / 60) % 2) - 1));
+      const m = ll - c / 2;
+      let r1 = 0, g1 = 0, b1 = 0;
+      if (hh < 60) { r1 = c; g1 = x; b1 = 0; }
+      else if (hh < 120) { r1 = x; g1 = c; b1 = 0; }
+      else if (hh < 180) { r1 = 0; g1 = c; b1 = x; }
+      else if (hh < 240) { r1 = 0; g1 = x; b1 = c; }
+      else if (hh < 300) { r1 = x; g1 = 0; b1 = c; }
+      else { r1 = c; g1 = 0; b1 = x; }
+      const toHex = v => Math.round((v + m) * 255).toString(16).padStart(2, '0');
+      return `#${toHex(r1)}${toHex(g1)}${toHex(b1)}`.toUpperCase();
+    }
+
+    function darkenLightnessBy30(hexColor) {
+      const hsl = hexToHsl(hexColor);
+      return hslToHex(hsl.h, hsl.s, Math.max(0, hsl.l - 30));
+    }
+
+    function makeBranchColorObj(bgHex, idx) {
+      const hsl = hexToHsl(bgHex);
+      const borderHex = darkenLightnessBy30(bgHex);
+      const fgHex = hsl.l < 52 ? '#FFFFFF' : '#000000';
+      return { bg: bgHex, border: borderHex, fg: fgHex, _idx: idx };
+    }
+
+    const BRANCH_SOFT_PALETTE = [
+      '#DBEAFE', // Azzurro pastello
+      '#DCFCE7', // Verde menta pastello
+      '#FEF3C7', // Ambra pastello
+      '#F3E8FF', // Lilla pastello
+      '#FCE7F3', // Rosa pastello
+      '#CCFBF1', // Acquamarina pastello
+      '#FFEDD5', // Pesca pastello
+      '#E0E7FF', // Indaco pastello
+      '#FEF9C3', // Giallo chiaro
+      '#E0F2FE'  // Ciano tenue
+    ].map((hex, idx) => makeBranchColorObj(hex, idx));
+
+    const CONFLICT_GRAY_COLOR = makeBranchColorObj('#D1D5DB', -99);
+
+    let branchColorAssignments = new Map();
+    let branchColorCursor = 0;
+
+    function assignBranchColor(nodeKey) {
+      if (!nodeKey) return null;
+      if (branchColorAssignments.has(nodeKey)) return branchColorAssignments.get(nodeKey);
+      const usedIndices = new Set(Array.from(branchColorAssignments.values()).map(v => v._idx));
+      let chosenIdx = -1;
+      for (let i = 0; i < BRANCH_SOFT_PALETTE.length; i++) {
+        const idx = (branchColorCursor + i) % BRANCH_SOFT_PALETTE.length;
+        if (!usedIndices.has(idx)) { chosenIdx = idx; break; }
+      }
+      if (chosenIdx === -1) chosenIdx = branchColorCursor % BRANCH_SOFT_PALETTE.length;
+      branchColorCursor = (chosenIdx + 1) % BRANCH_SOFT_PALETTE.length;
+      const entry = { ...BRANCH_SOFT_PALETTE[chosenIdx] };
+      branchColorAssignments.set(nodeKey, entry);
+      return entry;
+    }
+
+    function releaseBranchColor(nodeKey) {
+      if (nodeKey) branchColorAssignments.delete(nodeKey);
+    }
+
+    function getOwnNodeColor(type, val) {
+      const prefix = type === 'listino' ? 'lst:' : type === 'settore' ? 'set:' : type === 'capitolo' ? 'cap:' : 'par:';
+      return branchColorAssignments.get(prefix + val) || null;
+    }
+
+    function resolveTraversedColor(colorsList) {
+      const valid = colorsList.filter(Boolean);
+      if (valid.length === 0) return null;
+      const distinctBgs = new Set(valid.map(c => c.bg.toUpperCase()));
+      if (distinctBgs.size > 1) return CONFLICT_GRAY_COLOR;
+      return valid[0];
+    }
+
+    function buildChipColorStyle(colorObj) {
+      if (!colorObj) return '';
+      return ` style="--branch-bg:${colorObj.bg}; --branch-border:${colorObj.border}; --branch-fg:${colorObj.fg};"`;
+    }
+
+    function getNextDistinctListinoColor() {
+      const lastColor = loadedListini.length > 0 ? loadedListini[loadedListini.length - 1].color : null;
+      for (let attempt = 0; attempt < LISTINO_COLORS.length; attempt++) {
+        const candidate = LISTINO_COLORS[(nextListinoColorCursor + attempt) % LISTINO_COLORS.length];
+        if (!lastColor || candidate.toUpperCase() !== lastColor.toUpperCase()) {
+          nextListinoColorCursor = (nextListinoColorCursor + attempt + 1) % LISTINO_COLORS.length;
+          return candidate;
+        }
+      }
+      const fallback = LISTINO_COLORS[nextListinoColorCursor % LISTINO_COLORS.length];
+      nextListinoColorCursor = (nextListinoColorCursor + 1) % LISTINO_COLORS.length;
+      return fallback;
+    }
+
+    function updateSingleListinoColor(listinoId, newColor) {
+      const target = loadedListini.find(l => l.id === listinoId);
+      if (!target) return;
+      const validHex = normalizeHexColor(newColor, target.color);
+      target.color = validHex;
+      target.items.forEach(it => { it.listinoColor = validHex; });
+      applyFilters();
+    }
+    let items = [];
+    let selectedListini = new Set();
+    let selectedSettori = new Set();
+    let selectedCapitoli = new Set();
+    let selectedParagrafi = new Set();
+    let rowDensity = 'med';
+    let wasAppVisibleBeforeImport = false;
+    let turboOn = true;
+    let estesaOn = false;
+    let orOn = false;
+    let currentShown = [];
+    let sortMode = 'listino';
+    let listinoMeta = { name: '', year: '', filename: '' };
+    let jsonUrl = 'https://raw.githubusercontent.com/enricomarcigaglia-cmyk/progetto/main/prezzario_veneto_2026.json';
+    let maxResults = 1500;
+    let settoreOrder = [];
+    let capitoloOrder = [];
+    let paragrafoOrder = [];
+    let pendingTabularImport = null;
+
+    const searchInput = document.getElementById('search');
+    const statusEl = document.getElementById('loadStatusMsg');
+    const contentEl = document.getElementById('content');
+    const fileInput = document.getElementById('fileInput');
+    const resultCount = document.getElementById('resultCount');
+    const totaliCount = document.getElementById('totaliCount');
+    const listinoName = document.getElementById('listinoName');
+    const btnTurbo = document.getElementById('btnTurbo');
+    const btnEstesa = document.getElementById('btnEstesa');
+    const btnOr = document.getElementById('btnOr');
+    const btnClearFilters = document.getElementById('btnClearFilters');
+    const priceSort = document.getElementById('priceSort');
+    const modal = document.getElementById('modal');
+    const cardContent = document.getElementById('cardContent');
+    const loadOverlay = document.getElementById('loadOverlay');
+    const mainApp = document.getElementById('mainApp');
+    const btnLoadStart = document.getElementById('btnLoadStart');
+
+    const FIELD_ALIASES = {
+      codice: ['codice', 'cod', 'articolo', 'cod_art', 'codice_articolo', 'voce', 'id', 'cod_voce'],
+      descrizione: ['descrizione', 'testo', 'desc_voce', 'oggetto', 'denominazione', 'articolo_desc', 'desc'],
+      um: ['um', 'umi', 'unita', 'unita_misura', 'unita_di_misura', 'u_m'],
+      prezzo: ['prezzo', 'val', 'importo', 'prezzo_unitario', 'tariffa', 'euro', 'costo', 'prezzo_euro'],
+      man: ['man', 'manodopera', 'incidenza_manodopera', 'mo', '%mo', 'perc_man', 'manodopera_%'],
+      settore: ['settore', 'categoria', 'macrocategoria', 'gruppo'],
+      settoreCod: ['settorecod', 'cod_settore', 'id_settore'],
+      capitolo: ['capitolo', 'sottocategoria', 'famiglia', 'classe'],
+      capitoloCod: ['capitolocod', 'cod_capitolo', 'id_capitolo'],
+      paragrafoCod: ['paragrafocod', 'cod_paragrafo', 'paragrafo', 'par'],
+      sint: ['sint', 'sintetica', 'desc_sintetica', 'paragrafo_sintetico'],
+      estesa: ['estesa', 'desc_estesa', 'descrizione_estesa', 'note', 'specifiche']
+    };
+
+    function normKey(k) {
+      return String(k || '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().trim().replace(/[^a-z0-9%]+/g, '_').replace(/^_+|_+$/g, '');
+    }
+
+    function parsePrezzoVal(raw) {
+      if (typeof raw === 'number') return isFinite(raw) ? raw : 0;
+      if (raw === undefined || raw === null || raw === '') return 0;
+      let s = String(raw).replace(/[€\s]/g, '').trim();
+      if (!s) return 0;
+      if (s.includes(',') && s.includes('.')) {
+        s = s.lastIndexOf(',') > s.lastIndexOf('.') ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+      } else if (s.includes(',')) {
+        s = s.replace(',', '.');
+      }
+      const n = parseFloat(s);
+      return isNaN(n) ? 0 : n;
+    }
+
+    const _htmlDecodeArea = document.createElement('textarea');
+    function decodeHtmlEntities(str) {
+      if (!str || typeof str !== 'string') return str || '';
+      if (!str.includes('&')) return str;
+      _htmlDecodeArea.innerHTML = str;
+      return _htmlDecodeArea.value;
+    }
+
+    function normalizeRowItem(rawObj, fallbackCtx = {}, explicitMap = null) {
+      const keys = Object.keys(rawObj || {});
+      const mapped = {};
+
+      if (explicitMap) {
+        for (const [targetField, colName] of Object.entries(explicitMap)) {
+          if (colName && rawObj[colName] !== undefined && rawObj[colName] !== null && String(rawObj[colName]).trim() !== '') {
+            mapped[targetField] = rawObj[colName];
+          }
+        }
+      } else {
+        for (const [targetField, aliases] of Object.entries(FIELD_ALIASES)) {
+          for (const k of keys) {
+            const nk = normKey(k);
+            if (aliases.includes(nk) && rawObj[k] !== undefined && rawObj[k] !== null && String(rawObj[k]).trim() !== '') {
+              mapped[targetField] = rawObj[k];
+              break;
+            }
+          }
+        }
+      }
+
+      const descrizione = decodeHtmlEntities(String(mapped.descrizione ?? fallbackCtx.descrizione ?? '')).trim();
+      const sintVal = decodeHtmlEntities(String(mapped.sint ?? fallbackCtx.sint ?? '')).trim();
+      const estesaVal = decodeHtmlEntities(String(mapped.estesa ?? fallbackCtx.estesa ?? '')).trim();
+      const codice = decodeHtmlEntities(String(mapped.codice ?? fallbackCtx.codice ?? '')).trim();
+      const mainDesc = descrizione || sintVal || estesaVal || codice;
+      if (!codice && !mainDesc) return null;
+
+      const settoreRaw = decodeHtmlEntities(String(mapped.settore ?? fallbackCtx.settore ?? '')).trim();
+      const capitoloRaw = decodeHtmlEntities(String(mapped.capitolo ?? fallbackCtx.capitolo ?? '')).trim();
+      const paragrafoRaw = decodeHtmlEntities(String(mapped.paragrafoCod ?? fallbackCtx.paragrafoCod ?? '')).trim();
+
+      return {
+        codice,
+        descrizione: mainDesc,
+        um: String(mapped.um ?? fallbackCtx.um ?? '').trim(),
+        prezzo: parsePrezzoVal(mapped.prezzo ?? fallbackCtx.prezzo ?? 0),
+        man: String(mapped.man ?? fallbackCtx.man ?? '').trim(),
+        settore: settoreRaw || '(Senza settore)',
+        settoreCod: String(mapped.settoreCod ?? fallbackCtx.settoreCod ?? '').trim(),
+        capitolo: capitoloRaw || '(Senza capitolo)',
+        capitoloCod: String(mapped.capitoloCod ?? fallbackCtx.capitoloCod ?? '').trim(),
+        paragrafoCod: paragrafoRaw || '(Senza paragrafo)',
+        sint: sintVal,
+        estesa: estesaVal,
+        searchNorm: ''
+      };
+    }
+
+    function detectKindFromText(text, ext) {
+      if (['json', 'xml', 'csv', 'tsv', 'txt', 'rxr'].includes(ext) && ext !== 'txt' && ext !== 'rxr') {
+        return ext;
+      }
+      const trimmed = String(text || '').replace(/^\uFEFF/, '').trim();
+      if (!trimmed) return ext || 'txt';
+      if (trimmed.startsWith('<?xml') || (/^<[a-zA-Z_:][a-zA-Z0-9._:-]*/.test(trimmed) && trimmed.includes('</'))) {
+        return 'xml';
+      }
+      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try { JSON.parse(trimmed); return 'json'; } catch (e) {}
+      }
+      if (ext === 'tsv') return 'tsv';
+      return 'delimited';
+    }
+
+    function parseJsonListino(text) {
+      const data = JSON.parse(text);
+      if (Array.isArray(data)) {
+        return {
+          items: data.map(r => normalizeRowItem(r)).filter(Boolean),
+          metaName: 'Listino JSON'
+        };
+      }
+      if (Array.isArray(data.settori)) {
+        return {
+          items: flattenPrezzario(data),
+          metaName: data.desc || 'Listino'
+        };
+      }
+      const arr = data.items || data.articoli || data.voci || data.prezzi;
+      if (Array.isArray(arr)) {
+        return {
+          items: arr.map(r => normalizeRowItem(r)).filter(Boolean),
+          metaName: data.desc || data.nome || 'Listino'
+        };
+      }
+      throw new Error('Struttura JSON non riconosciuta');
+    }
+
+    function parseXmlListino(xmlText) {
+      const clean = String(xmlText || '').replace(/^\uFEFF/, '').trim();
+      const doc = new DOMParser().parseFromString(clean, 'application/xml');
+      if (doc.querySelector('parsererror')) {
+        throw new Error('File XML non valido o malformato');
+      }
+      const out = [];
+      const priceTagNames = ['prezzo', 'val', 'importo', 'tariffa', 'prezzo_unitario', 'prezzo_euro'];
+      const allEls = Array.from(doc.getElementsByTagName('*'));
+
+      for (const el of allEls) {
+        const childMap = {};
+        let hasPriceChild = false;
+        let hasDescChild = false;
+
+        Array.from(el.attributes || []).forEach(attr => {
+          const aKey = normKey(attr.name);
+          const aVal = (attr.value || '').trim();
+          if (aKey && aVal && !childMap[aKey]) childMap[aKey] = aVal;
+        });
+
+        for (const ch of Array.from(el.children)) {
+          const tag = normKey(ch.localName || ch.tagName);
+          const txt = (ch.textContent || '').trim();
+          if (!tag || txt === '') continue;
+          childMap[tag] = txt;
+          if (priceTagNames.includes(tag)) hasPriceChild = true;
+          if (FIELD_ALIASES.descrizione.includes(tag)) hasDescChild = true;
+        }
+
+        if (hasPriceChild || (hasDescChild && (childMap.codice || childMap.cod))) {
+          const ctx = {};
+          let p = el.parentElement;
+          while (p && p !== doc.documentElement) {
+            const pTag = normKey(p.localName || p.tagName);
+            const pDesc = p.getAttribute('desc') || p.getAttribute('descrizione') ||
+              Array.from(p.children).find(c => ['desc', 'descrizione'].includes(normKey(c.localName || c.tagName)))?.textContent?.trim() || '';
+            const pCod = p.getAttribute('cod') || p.getAttribute('codice') ||
+              Array.from(p.children).find(c => ['cod', 'codice'].includes(normKey(c.localName || c.tagName)))?.textContent?.trim() || '';
+            if (pTag.includes('settore') && !ctx.settore) { ctx.settore = pDesc; ctx.settoreCod = pCod; }
+            if (pTag.includes('capitol') && !ctx.capitolo) { ctx.capitolo = pDesc; ctx.capitoloCod = pCod; }
+            if (pTag.includes('paragraf') && !ctx.paragrafoCod) { ctx.paragrafoCod = pCod || pDesc; }
+            p = p.parentElement;
+          }
+          const item = normalizeRowItem(childMap, ctx);
+          if (item) out.push(item);
+        }
+      }
+
+      if (out.length === 0) throw new Error('Nessuna voce di listino trovata nel file XML');
+      return {
+        items: out,
+        metaName: doc.documentElement.getAttribute('desc') || doc.documentElement.getAttribute('nome') || 'Listino XML'
+      };
+    }
+
+    function detectDelimiter(lines) {
+      const candidates = [';', ',', '\t', '|'];
+      let best = ';';
+      let bestScore = -1;
+      const sample = lines.slice(0, Math.min(lines.length, 10));
+      for (const d of candidates) {
+        const counts = sample.map(l => splitDelimitedLine(l, d).length);
+        const avg = counts.reduce((a, b) => a + b, 0) / counts.length;
+        const consistent = counts.every(c => c === counts[0] && c > 1);
+        const score = avg + (consistent ? 5 : 0);
+        if (score > bestScore && avg > 1) {
+          bestScore = score;
+          best = d;
+        }
+      }
+      return best;
+    }
+
+    function splitDelimitedLine(line, delim) {
+      const cols = [];
+      let cur = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+          else { inQuotes = !inQuotes; }
+        } else if (ch === delim && !inQuotes) {
+          cols.push(cur.trim());
+          cur = '';
+        } else {
+          cur += ch;
+        }
+      }
+      cols.push(cur.trim());
+      return cols;
+    }
+
+    function rowsToObjects(headers, dataRows) {
+      const cleanHeaders = headers.map((h, idx) => {
+        const t = String(h || '').trim();
+        return t || ('col_' + (idx + 1));
+      });
+      return dataRows.map(cells => {
+        const obj = {};
+        cleanHeaders.forEach((h, idx) => { obj[h] = cells[idx] ?? ''; });
+        return obj;
+      });
+    }
+
+    function hasEssentialMapping(rowsObjs) {
+      const sample = rowsObjs.slice(0, Math.min(rowsObjs.length, 25));
+      let hasDesc = false;
+      let hasPrice = false;
+      for (const r of sample) {
+        const item = normalizeRowItem(r);
+        if (item) {
+          if (item.descrizione) hasDesc = true;
+          if (item.prezzo > 0) hasPrice = true;
+        }
+      }
+      return hasDesc && hasPrice;
+    }
+
+    function guessInitialMapping(headers) {
+      const map = {};
+      for (const [targetField, aliases] of Object.entries(FIELD_ALIASES)) {
+        for (const h of headers) {
+          if (aliases.includes(normKey(h))) {
+            map[targetField] = h;
+            break;
+          }
+        }
+      }
+      return map;
+    }
+
+    function formatFileDate(ms) {
+      if (!ms) return 'N/D';
+      const d = new Date(ms);
+      return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' +
+             d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function askDuplicateAction(existingListino, newFile) {
+      return new Promise((resolve) => {
+        const dupModal = document.getElementById('dupModal');
+        const infoEl = document.getElementById('dupInfoText');
+        const newDateStr = formatFileDate(newFile.lastModified);
+        infoEl.innerHTML = `Il file <strong>${escapeHtml(newFile.name)}</strong> è già caricato in archivio.<br><br>` +
+          `• <strong>File esistente:</strong> ${escapeHtml(existingListino.fileDateStr)} (${formatNumber(existingListino.items.length)} voci)<br>` +
+          `• <strong>Nuovo file selezionato:</strong> ${escapeHtml(newDateStr)}<br><br>` +
+          `Vuoi sovrascrivere le voci del listino esistente oppure mantenere quello precedente?`;
+        dupModal.classList.add('show');
+        const cleanup = (choice) => {
+          dupModal.classList.remove('show');
+          btnOver.onclick = btnKeep.onclick = btnClose.onclick = null;
+          resolve(choice);
+        };
+        const btnOver = document.getElementById('btnOverwriteDup');
+        const btnKeep = document.getElementById('btnKeepDup');
+        const btnClose = document.getElementById('btnCloseDup');
+        btnOver.onclick = () => cleanup('overwrite');
+        btnKeep.onclick = () => cleanup('keep');
+        btnClose.onclick = () => cleanup('keep');
+      });
+    }
+
+    function rebuildUnifiedCatalog() {
+      const merged = [];
+      loadedListini.forEach(lst => {
+        lst.items.forEach(it => {
+          it.listinoId = lst.id;
+          it.listinoName = lst.name;
+          it.listinoFilename = lst.filename;
+          it.listinoColor = lst.color;
+          merged.push(it);
+        });
+      });
+      items = merged;
+      settoreOrder = [...new Set(items.map(i => i.settore).filter(Boolean))];
+      capitoloOrder = [...new Set(items.map(i => i.capitolo).filter(Boolean))];
+      paragrafoOrder = [...new Set(items.map(i => i.paragrafoCod).filter(Boolean))];
+      rebuildNorm();
+      if (loadedListini.length === 1) {
+        const only = loadedListini[0];
+        listinoMeta = { name: only.name, year: only.year || '', filename: only.filename };
+        listinoName.textContent = only.filename;
+      } else if (loadedListini.length > 1) {
+        listinoMeta = { name: loadedListini.map(l => l.name).join(' + '), year: '', filename: loadedListini.length + ' listini caricati' };
+        listinoName.textContent = loadedListini.length + ' listini uniti';
+      } else {
+        listinoMeta = { name: '', year: '', filename: '' };
+        listinoName.textContent = 'Nessun listino caricato';
+      }
+      const totStr = '/' + formatNumber(items.length);
+      if (totaliCount) totaliCount.textContent = totStr;
+      const mobTot = document.getElementById('mobTotaliCount');
+      if (mobTot) mobTot.textContent = totStr;
+      const box = document.getElementById('loadedListiniBox');
+      if (box) {
+        box.innerHTML = loadedListini.map(l =>
+          `<div style="display:flex; align-items:center; justify-content:space-between; gap:6px; padding:3px 6px; background:#FFFFFF; border-radius:4px; border:1px solid #E5E7EB;">
+            <input type="color" class="listino-color-picker" data-id="${escapeHtml(l.id)}" value="${escapeHtml(l.color)}" title="Scegli colore identificativo per ${escapeHtml(l.filename)}" aria-label="Colore listino ${escapeHtml(l.filename)}" style="width:22px; height:20px; padding:0; border:1px solid #D1D5DB; border-radius:4px; background:transparent; cursor:pointer; flex-shrink:0;">
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1 1 auto; min-width:0;">
+              <span class="listino-dot" data-dot-id="${escapeHtml(l.id)}" style="background:${l.color};"></span><strong>${escapeHtml(l.filename)}</strong>
+            </span>
+            <span style="color:#6B7280; white-space:nowrap; flex-shrink:0;">${formatNumber(l.items.length)} voci · ${escapeHtml(l.fileDateStr)}</span>
+            <button type="button" class="btn-remove-listino" data-id="${escapeHtml(l.id)}" title="Rimuovi listino" aria-label="Rimuovi listino ${escapeHtml(l.filename)}" style="width:20px; height:20px; border:none; border-radius:4px; background:var(--red); color:#FFFFFF; font-weight:bold; line-height:1; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; padding:0;">×</button>
+          </div>`
+        ).join('');
+        box.querySelectorAll('.listino-color-picker').forEach(inp => {
+          inp.addEventListener('input', (e) => {
+            const hex = e.target.value;
+            const dotEl = box.querySelector(`.listino-dot[data-dot-id="${inp.dataset.id}"]`);
+            if (dotEl) dotEl.style.background = hex;
+            updateSingleListinoColor(inp.dataset.id, hex);
+          });
+        });
+        box.querySelectorAll('.btn-remove-listino').forEach(btn => {
+          btn.onclick = () => removeSingleListino(btn.dataset.id);
+        });
+      }
+    }
+
+    function removeSingleListino(listinoId) {
+      const idx = loadedListini.findIndex(l => l.id === listinoId);
+      if (idx < 0) return;
+      loadedListini.splice(idx, 1);
+      selectedListini.delete(listinoId);
+      if (loadedListini.length === 0) {
+        selectedListini.clear();
+        selectedSettori.clear();
+        selectedCapitoli.clear();
+        selectedParagrafi.clear();
+        rebuildUnifiedCatalog();
+        buildVocab();
+        applyFilters();
+        document.getElementById('colorModal')?.classList.remove('show');
+        if (mainApp) mainApp.style.display = 'none';
+        if (loadOverlay) {
+          loadOverlay.style.display = 'flex';
+          if (statusEl) statusEl.textContent = 'Seleziona uno o più file listino (JSON, XML, CSV, TSV, TXT, XLS, XLSX, RXR).';
+        }
+        return;
+      }
+      rebuildUnifiedCatalog();
+      const validSettori = new Set(items.map(i => getItemSetKey(i)));
+      const validCapitoli = new Set(items.map(i => getItemCapKey(i)));
+      const validParagrafi = new Set(items.map(i => getItemParKey(i)));
+      selectedSettori.forEach(s => { if (!validSettori.has(s)) selectedSettori.delete(s); });
+      selectedCapitoli.forEach(c => { if (!validCapitoli.has(c)) selectedCapitoli.delete(c); });
+      selectedParagrafi.forEach(p => { if (!validParagrafi.has(p)) selectedParagrafi.delete(p); });
+      buildVocab();
+      applyFilters();
+    }
+
+    function openColumnMapper(headers, rowsObjs, file, metaName, stepInfo, onDone) {
+      pendingTabularImport = { headers, rowsObjs, file, metaName, onDone };
+      const guess = guessInitialMapping(headers);
+      const targetFields = [
+        ['codice', 'Codice'], ['descrizione', 'Descrizione *'], ['um', 'Unità misura'],
+        ['prezzo', 'Prezzo *'], ['man', '% Manodopera'], ['settore', 'Settore'],
+        ['capitolo', 'Capitolo'], ['paragrafoCod', 'Paragrafo'], ['sint', 'Sintetica'], ['estesa', 'Estesa']
+      ];
+      const optionsHtml = ['<option value="">-- Non assegnata --</option>']
+        .concat(headers.map(h => `<option value="${escapeHtml(h)}">${escapeHtml(h)}</option>`)).join('');
+      const titleEl = document.querySelector('#mapModal h3');
+      if (titleEl) {
+        titleEl.textContent = stepInfo
+          ? `Mappatura colonne — Listino ${stepInfo.index} di ${stepInfo.total} (${file.name})`
+          : `Mappatura colonne — ${file.name}`;
+      }
+      document.getElementById('mapInfoText').textContent = `File "${file.name}" (${rowsObjs.length} righe): verifica o assegna le colonne principali.`;
+      document.getElementById('mapFieldsGrid').innerHTML = targetFields.map(([key, label]) =>
+        `<label for="map_${key}">${label}</label><select id="map_${key}" data-field="${key}">${optionsHtml}</select>`
+      ).join('');
+      targetFields.forEach(([key]) => { const sel = document.getElementById('map_' + key); if (sel && guess[key]) sel.value = guess[key]; });
+      document.getElementById('mapPreviewBox').innerHTML = rowsObjs.slice(0, 4).map((r, i) =>
+        `<div><strong>Riga ${i + 1}:</strong> ${escapeHtml(headers.slice(0, 5).map(h => `${h}=${r[h]}`).join(' | '))}</div>`
+      ).join('') || 'Anteprima non disponibile';
+      if (loadOverlay && loadOverlay.style.display !== 'none') loadOverlay.style.display = 'none';
+      document.getElementById('mapModal').classList.add('show');
+    }
+
+    function registerParsedListino(parsedItems, file, metaName, extMeta = null) {
+      if (!parsedItems || parsedItems.length === 0) throw new Error('Nessuna voce valida trovata nel listino ' + file.name);
+      const cleanName = (extMeta && extMeta.name) ? extMeta.name : (metaName || file.name.replace(/\.[^.]+$/, ''));
+      const yearMatch = file.name.match(/20\d{2}/);
+      const fileDateMs = file.lastModified || Date.now();
+      const fileDateStr = (extMeta && extMeta.date) ? String(extMeta.date) : formatFileDate(fileDateMs);
+      const existingIdx = loadedListini.findIndex(l => l.filename.toLowerCase() === file.name.toLowerCase() && l.name.toLowerCase() === cleanName.toLowerCase());
+      if (existingIdx >= 0) {
+        const prev = loadedListini[existingIdx];
+        const nextColor = (extMeta && extMeta.color) ? normalizeHexColor(extMeta.color, prev.color) : prev.color;
+        loadedListini[existingIdx] = { ...prev, name: cleanName, year: (extMeta && extMeta.date) || (yearMatch ? yearMatch[0] : prev.year), fileDateMs, fileDateStr, color: nextColor, items: parsedItems };
+      } else {
+        const color = (extMeta && extMeta.color) ? normalizeHexColor(extMeta.color, getNextDistinctListinoColor()) : getNextDistinctListinoColor();
+        const id = 'lst_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        loadedListini.push({ id, name: cleanName, filename: file.name, year: (extMeta && extMeta.date) || (yearMatch ? yearMatch[0] : ''), fileDateMs, fileDateStr, color, items: parsedItems });
+      }
+    }
+
+    function finalizeImportedItems() {
+      if (loadedListini.length === 0) {
+        if (!wasAppVisibleBeforeImport && loadOverlay) {
+          loadOverlay.style.display = 'flex';
+          if (statusEl) statusEl.textContent = 'Seleziona uno o più file listino (JSON, XML, CSV, TSV, TXT, XLS, XLSX, RXR).';
+        }
+        return;
+      }
+      rebuildUnifiedCatalog();
+      if (loadOverlay) loadOverlay.style.display = 'none';
+      if (mainApp) mainApp.style.display = 'flex';
+      requestAppFullscreen();
+      afterLoad();
+    }
+
+    function cancelWizardStep() {
+      const cb = pendingTabularImport ? pendingTabularImport.onDone : null;
+      pendingTabularImport = null;
+      document.getElementById('mapModal').classList.remove('show');
+      if (cb) cb(false);
+    }
+    document.getElementById('btnCloseMap').addEventListener('click', cancelWizardStep);
+    document.getElementById('btnCancelMap').addEventListener('click', cancelWizardStep);
+    document.getElementById('btnConfirmMap').addEventListener('click', () => {
+      if (!pendingTabularImport) return;
+      const explicitMap = {};
+      document.querySelectorAll('#mapFieldsGrid select').forEach(sel => { if (sel.value) explicitMap[sel.dataset.field] = sel.value; });
+      const mappedItems = pendingTabularImport.rowsObjs.map(r => normalizeRowItem(r, {}, explicitMap)).filter(Boolean);
+      const { file, metaName, onDone } = pendingTabularImport;
+      pendingTabularImport = null;
+      document.getElementById('mapModal').classList.remove('show');
+      try {
+        registerParsedListino(mappedItems, file, metaName);
+        if (onDone) onDone(true);
+      } catch (err) {
+        alert('Errore mappatura: ' + err.message);
+        if (onDone) onDone(false);
+      }
+    });
+
+    function parseDelimitedText(text, forcedDelim, file, stepInfo, onDone) {
+      const lines = String(text || '').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim() !== '');
+      if (lines.length < 2) throw new Error('File delimitato vuoto o con poche righe');
+      const delim = forcedDelim || detectDelimiter(lines);
+      const headers = splitDelimitedLine(lines[0], delim);
+      const rowsObjs = rowsToObjects(headers, lines.slice(1).map(l => splitDelimitedLine(l, delim)));
+      if (!hasEssentialMapping(rowsObjs)) {
+        openColumnMapper(headers, rowsObjs, file, file.name.replace(/\.[^.]+$/, ''), stepInfo, onDone);
+        return null;
+      }
+      return { items: rowsObjs.map(r => normalizeRowItem(r)).filter(Boolean), metaName: file.name.replace(/\.[^.]+$/, '') };
+    }
+
+    function parseExcelBuffer(arrayBuffer, file, stepInfo, onDone) {
+      if (!window.XLSX) throw new Error('Libreria SheetJS (xlsx.full.min.js) non disponibile.');
+      const wb = window.XLSX.read(arrayBuffer, { type: 'array' });
+      const firstSheet = wb.SheetNames[0];
+      if (!firstSheet) throw new Error('Foglio Excel non trovato');
+      const matrix = window.XLSX.utils.sheet_to_json(wb.Sheets[firstSheet], { header: 1, defval: '' });
+      const nonEmpty = matrix.filter(row => row.some(cell => String(cell).trim() !== ''));
+      if (nonEmpty.length < 2) throw new Error('Foglio Excel vuoto');
+      const headers = nonEmpty[0].map((h, idx) => String(h || '').trim() || ('col_' + (idx + 1)));
+      const rowsObjs = rowsToObjects(headers, nonEmpty.slice(1));
+      if (!hasEssentialMapping(rowsObjs)) {
+        openColumnMapper(headers, rowsObjs, file, firstSheet, stepInfo, onDone);
+        return null;
+      }
+      return { items: rowsObjs.map(r => normalizeRowItem(r)).filter(Boolean), metaName: firstSheet };
+    }
+
+    function readTextWithAutoEncoding(file) {
+      return new Promise((resolve, reject) => {
+        const readerUtf8 = new FileReader();
+        readerUtf8.onload = function(ev) {
+          const textUtf8 = String(ev.target.result || '');
+          if (textUtf8.includes('\uFFFD')) {
+            const readerAnsi = new FileReader();
+            readerAnsi.onload = function(ev2) {
+              resolve(String(ev2.target.result || ''));
+            };
+            readerAnsi.onerror = () => reject(new Error('Impossibile leggere il file in codifica windows-1252.'));
+            readerAnsi.readAsText(file, 'windows-1252');
+          } else {
+            resolve(textUtf8);
+          }
+        };
+        readerUtf8.onerror = () => reject(new Error('Impossibile leggere il file in codifica UTF-8.'));
+        readerUtf8.readAsText(file, 'utf-8');
+      });
+    }
+
+    function processSingleFileStep(file, stepInfo) {
+      return new Promise((resolve) => {
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        if (statusEl) statusEl.textContent = `Lettura (${stepInfo.index}/${stepInfo.total}): ${file.name}...`;
+        if (ext === 'xls' || ext === 'xlsx') {
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            try {
+              const parsedXls = parseExcelBuffer(ev.target.result, file, stepInfo, (ok) => resolve(ok));
+              if (parsedXls) { registerParsedListino(parsedXls.items, file, parsedXls.metaName); resolve(true); }
+            } catch (err) {
+              alert('Errore nel caricamento di "' + file.name + '": ' + err.message);
+              resolve(false);
+            }
+          };
+          reader.onerror = function() { alert('Impossibile leggere "' + file.name + '".'); resolve(false); };
+          reader.readAsArrayBuffer(file);
+          return;
+        }
+        readTextWithAutoEncoding(file).then(rawText => {
+          try {
+            const kind = detectKindFromText(rawText, ext);
+            let parsed = null;
+            if (kind === 'json') parsed = parseJsonListino(rawText);
+            else if (kind === 'xml') parsed = parseXmlListino(rawText);
+            else if (kind === 'tsv') parsed = parseDelimitedText(rawText, '\t', file, stepInfo, (ok) => resolve(ok));
+            else parsed = parseDelimitedText(rawText, null, file, stepInfo, (ok) => resolve(ok));
+            if (parsed) { registerParsedListino(parsed.items, file, parsed.metaName); resolve(true); }
+          } catch (err) {
+            alert('Errore nel caricamento di "' + file.name + '": ' + err.message);
+            resolve(false);
+          }
+        }).catch(err => {
+          alert('Errore nel caricamento di "' + file.name + '": ' + err.message);
+          resolve(false);
+        });
+      });
+    }
+
+    async function importListinoFiles(fileList) {
+      const files = Array.from(fileList || []);
+      if (files.length === 0) return;
+      wasAppVisibleBeforeImport = (mainApp && mainApp.style.display !== 'none');
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const existing = loadedListini.find(l => l.filename.toLowerCase() === file.name.toLowerCase());
+        if (existing) {
+          const decision = await askDuplicateAction(existing, file);
+          if (decision !== 'overwrite') continue;
+        }
+        await processSingleFileStep(file, { index: i + 1, total: files.length });
+      }
+      finalizeImportedItems();
+    }
+    let isWide = false;
+
+    function getDesktopColsTemplate() {
+      const isLandscapeMobile = window.innerWidth > 700 && window.innerHeight <= 540;
+      return isLandscapeMobile
+        ? 'minmax(0, 14%) minmax(0, 14%) minmax(0, 52%) minmax(0, 5%) minmax(0, 10%) minmax(0, 5%)'
+        : 'minmax(0, 15%) minmax(0, 15%) minmax(0, 55%) minmax(0, 5%) minmax(0, 5%) minmax(0, 5%)';
+    }
+
+    function checkWide() {
+      isWide = !isMobilePortrait();
+      updateGrid();
+    }
+
+    function syncSortUI() {
+      const header = document.querySelector('.grid-header');
+      if (header) {
+        header.querySelectorAll('[data-col]').forEach(el => {
+          const col = el.dataset.col;
+          const baseLabel = el.dataset.label || '';
+          const isActive = (sortMode !== 'listino' && sortCol === col);
+          el.classList.toggle('active', isActive);
+          const textVal = isActive ? (baseLabel + (sortDir === 'asc' ? ' ↑' : ' ↓')) : baseLabel;
+          const labelSpan = el.querySelector('.grid-desc-label');
+          if (labelSpan) {
+            labelSpan.textContent = textVal;
+          } else {
+            el.textContent = textVal;
+          }
+        });
+      }
+      const btnSortReset = document.getElementById('btnSortListinoOrder');
+      if (btnSortReset) {
+        const isCustomSorted = sortMode !== 'listino';
+        btnSortReset.disabled = !isCustomSorted;
+        btnSortReset.setAttribute('aria-disabled', String(!isCustomSorted));
+        btnSortReset.classList.toggle('is-sorted', isCustomSorted);
+      }
+    }
+
+    function updateGrid() {
+      const header = document.querySelector('.grid-header');
+      const cols = getDesktopColsTemplate();
+      header.style.gridTemplateColumns = cols;
+      const colsDef = [
+        ['settore', 'Settore', 'left'],
+        ['capitolo', 'Capitolo', 'left'],
+        ['descrizione', 'Descrizione', 'left'],
+        ['um', 'UM', 'center'],
+        ['prezzo', 'Prezzo', 'right'],
+        ['man', '%Mo', 'center']
+      ];
+      header.innerHTML = colsDef.map(([key, label, align]) => {
+        if (key === 'descrizione') {
+          return `<div class="grid-header-desc-cell" data-col="${key}" data-label="${label}" style="text-align:${align};" title="Ordina per ${label}"><span class="grid-desc-label">${label}</span><button id="btnSortListinoOrder" class="btn-nav-bar-toggle btn-grid-sort-reset" type="button" disabled title="Ripristina l'ordinamento naturale del listino" aria-disabled="true">Ordine di listino</button></div>`;
+        }
+        return `<span data-col="${key}" data-label="${label}" style="text-align:${align};" title="Ordina per ${label}">${label}</span>`;
+      }).join('');
+      header.querySelectorAll('[data-col]').forEach(el => {
+        el.addEventListener('click', () => {
+          const col = el.dataset.col;
+          if (sortMode !== 'listino' && sortCol === col) {
+            sortDir = (sortDir === 'asc') ? 'desc' : 'asc';
+          } else {
+            sortCol = col;
+            sortDir = 'asc';
+          }
+          sortMode = 'custom';
+          syncSortUI();
+          applyFilters();
+        });
+      });
+      const btnSortReset = document.getElementById('btnSortListinoOrder');
+      btnSortReset?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (btnSortReset.disabled) return;
+        sortMode = 'listino';
+        syncSortUI();
+        applyFilters();
+      });
+      syncSortUI();
+    }
+
+    window.addEventListener('resize', checkWide);
+
+    function getDefaultPrompt(item) {
+      const fields = [
+        'Listino: ' + (listinoMeta.filename || listinoMeta.name || ''),
+        'Settore: ' + (item.settoreCod || '') + ' ' + (item.settore || ''),
+        'Capitolo: ' + (item.capitoloCod || '') + ' ' + (item.capitolo || ''),
+        'Paragrafo: ' + (item.paragrafoCod || ''),
+        'Sintetica: ' + (item.sint || ''),
+        'Estesa: ' + (item.estesa || ''),
+        'Codice: ' + (item.codice || ''),
+        'Descrizione: ' + (item.descrizione || ''),
+        'UM: ' + (item.um || ''),
+        'Prezzo: ' + (item.prezzo || 0).toFixed(2),
+        '% Manodopera: ' + (item.man || '')
+      ].join('\n');
+      return `Sei un direttore lavori esperto di costruzioni .
+Cerca online nel prezziario ${listinoMeta.name || 'Listino'} ${item.codice || ''}.
+Rispondimi punto per punto ripetendo la domanda iniziale.
+1. Descrizione del codice
+2. Posa e trasporto compresi? Esclusioni? 
+3. Requisiti tecnico prestazionali
+4. CE DOP UNI obbligatori (cita uni e oggetto)
+5. Verifiche e controlli in cantiere.
+6. Dicitura completa per computo metrico (codice txt copiabile)
+
+Dati articolo:
+${fields}`;
+    }
+
+    function isFullscreenActive() {
+      return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+    }
+
+    function updateFullscreenIcons() {
+      const active = isFullscreenActive();
+      const svgEnter = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>`;
+      const svgExit = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>`;
+      ['btnFullscreen', 'btnMobFullscreen'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.toggle('active', active);
+          el.innerHTML = active ? svgExit : svgEnter;
+          el.title = active ? 'Esci da schermo intero' : 'Schermo intero';
+        }
+      });
+    }
+
+    async function requestAppFullscreen() {
+      try {
+        const docEl = document.documentElement;
+        if (!isFullscreenActive()) {
+          if (docEl.requestFullscreen) {
+            await docEl.requestFullscreen({ navigationUI: 'hide' });
+          } else if (docEl.webkitRequestFullscreen) {
+            docEl.webkitRequestFullscreen();
+          } else if (docEl.msRequestFullscreen) {
+            docEl.msRequestFullscreen();
+          }
+        }
+      } catch (e) {}
+      updateFullscreenIcons();
+    }
+
+    async function toggleAppFullscreen() {
+      try {
+        if (isFullscreenActive()) {
+          if (document.exitFullscreen) await document.exitFullscreen();
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+          else if (document.msExitFullscreen) document.msExitFullscreen();
+        } else {
+          await requestAppFullscreen();
+        }
+      } catch (e) {}
+      updateFullscreenIcons();
+    }
+
+    document.addEventListener('fullscreenchange', updateFullscreenIcons);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
+    document.getElementById('btnFullscreen')?.addEventListener('click', toggleAppFullscreen);
+    document.getElementById('btnMobFullscreen')?.addEventListener('click', toggleAppFullscreen);
+    document.getElementById('btnDesktopSettings')?.addEventListener('click', () => {
+      document.getElementById('colorModal')?.classList.add('show');
+    });
+
+    // Blocco zoom pagina (Ctrl+rotella e pinch-to-zoom)
+    document.addEventListener('wheel', (e) => {
+      if (e.ctrlKey) e.preventDefault();
+    }, { passive: false });
+    document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+    document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+    document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+    // STT - Dettatura vocale con richiesta permessi immediata
+    const SpeechRecClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let isListening = false;
+    let micPermissionGranted = false;
+
+    async function preAuthorizeMic() {
+      if (micPermissionGranted) return true;
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach(track => track.stop());
+          micPermissionGranted = true;
+          return true;
+        }
+      } catch (err) {
+        return false;
+      }
+      return false;
+    }
+
+    function setMicListeningUI(listening) {
+      isListening = listening;
+      ['btnMic', 'btnMobMic'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.toggle('listening', listening);
+          el.title = listening ? 'Ascolto in corso... Tocca per fermare' : 'Dettatura vocale (STT)';
+        }
+      });
+    }
+
+    function initSpeechRecognition() {
+      if (!SpeechRecClass || recognition) return;
+      recognition = new SpeechRecClass();
+      recognition.lang = 'it-IT';
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+
+      let baseQuery = '';
+      recognition.onstart = () => {
+        baseQuery = searchInput.value.trim();
+        setMicListeningUI(true);
+      };
+      recognition.onresult = (event) => {
+        let interim = '';
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const txt = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalTranscript += txt;
+          else interim += txt;
+        }
+        const spoken = (finalTranscript || interim).trim();
+        if (spoken) {
+          searchInput.value = baseQuery ? (baseQuery + ' ' + spoken) : spoken;
+          updateAutocomplete();
+          applyFilters();
+        }
+      };
+      recognition.onerror = (event) => {
+        setMicListeningUI(false);
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          alert('Autorizzazione microfono negata. Abilita il microfono nelle impostazioni del browser per usare la dettatura vocale.');
+        }
+      };
+      recognition.onend = () => {
+        setMicListeningUI(false);
+      };
+    }
+
+    async function toggleVoiceDictation() {
+      if (!SpeechRecClass) {
+        alert('Dettatura vocale non supportata su questo browser. Usa Chrome, Edge o Safari aggiornato.');
+        return;
+      }
+      initSpeechRecognition();
+      if (isListening) {
+        try { recognition.stop(); } catch (e) {}
+        setMicListeningUI(false);
+        return;
+      }
+      try {
+        recognition.start();
+      } catch (e) {
+        setMicListeningUI(false);
+      }
+    }
+
+    document.getElementById('btnMic')?.addEventListener('click', toggleVoiceDictation);
+    document.getElementById('btnMobMic')?.addEventListener('click', toggleVoiceDictation);
+
+    btnLoadStart.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    btnTurbo.addEventListener('click', () => {
+      turboOn = !turboOn;
+      btnTurbo.classList.toggle('active', turboOn);
+      btnTurbo.setAttribute('aria-checked', String(turboOn));
+      rebuildNorm();
+      applyFilters();
+    });
+    btnEstesa?.addEventListener('click', () => {
+      estesaOn = !estesaOn;
+      btnEstesa.classList.toggle('active', estesaOn);
+      btnEstesa.setAttribute('aria-checked', String(estesaOn));
+      rebuildNorm();
+      applyFilters();
+    });
+    btnOr.addEventListener('click', () => {
+      orOn = !orOn;
+      btnOr.classList.toggle('active', orOn);
+      btnOr.setAttribute('aria-checked', String(orOn));
+      applyFilters();
+    });
+    const btnCustomPresetFilters = document.getElementById('btnCustomPresetFilters');
+    const lblCustomPresetFilters = document.getElementById('lblCustomPresetFilters');
+    const lblClearFilters = document.getElementById('lblClearFilters');
+
+    function syncCustomPresetFiltersUI() {
+      if (!btnCustomPresetFilters) return;
+      const hasPresets = Array.isArray(presetFiltersConfig) && presetFiltersConfig.length > 0;
+      if (!hasPresets) customPresetFiltersOn = false;
+      btnCustomPresetFilters.disabled = !hasPresets;
+      btnCustomPresetFilters.style.opacity = hasPresets ? '1' : '0.45';
+      btnCustomPresetFilters.style.cursor = hasPresets ? 'pointer' : 'not-allowed';
+      btnCustomPresetFilters.classList.toggle('active', hasPresets && customPresetFiltersOn);
+      btnCustomPresetFilters.setAttribute('aria-checked', String(hasPresets && customPresetFiltersOn));
+      if (lblCustomPresetFilters) {
+        lblCustomPresetFilters.style.opacity = hasPresets ? '1' : '0.5';
+        lblCustomPresetFilters.style.cursor = hasPresets ? 'pointer' : 'not-allowed';
+      }
+    }
+
+    function toggleCustomPresetFiltersSwitch() {
+      if (!btnCustomPresetFilters || btnCustomPresetFilters.disabled) return;
+      customPresetFiltersOn = !customPresetFiltersOn;
+      if (customPresetFiltersOn) {
+        applyPresetFiltersToState();
+        expandedTreeNodes.clear();
+      } else {
+        removePresetFiltersFromState();
+      }
+      applyFilters();
+    }
+
+    btnCustomPresetFilters?.addEventListener('click', toggleCustomPresetFiltersSwitch);
+    lblCustomPresetFilters?.addEventListener('click', toggleCustomPresetFiltersSwitch);
+
+    function executeClearAllFiltersSwitch() {
+      selectedListini.clear();
+      selectedSettori.clear();
+      selectedCapitoli.clear();
+      selectedParagrafi.clear();
+      branchColorAssignments.clear();
+      branchColorCursor = 0;
+      onlySelectedTreeOn = false;
+      customPresetFiltersOn = false;
+      expandedTreeNodes.clear();
+      applyFilters();
+    }
+
+    btnClearFilters?.addEventListener('click', executeClearAllFiltersSwitch);
+    lblClearFilters?.addEventListener('click', executeClearAllFiltersSwitch);
+
+    let invertedIndex = new Map();
+    let uniqueNormTokens = [];
+    let tokenStems = new Map();
+    let queryCache = new Map();
+    const MAX_QUERY_CACHE = 80;
+
+    function clearQueryCache() {
+      queryCache.clear();
+    }
+
+    function normalize(str, turbo) {
+      if (!str) return '';
+      let s = String(str);
+      if (turbo) {
+        s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      } else {
+        s = s.toLowerCase();
+      }
+      return s;
+    }
+
+    function stemItalianTech(tok) {
+      if (!tok || tok.length < 5 || /\d/.test(tok)) return tok;
+      if (tok.endsWith('azioni') || tok.endsWith('azione')) return tok.slice(0, -5);
+      if (tok.endsWith('imenti') || tok.endsWith('imento')) return tok.slice(0, -5);
+      if (tok.endsWith('che') || tok.endsWith('chi')) return tok.slice(0, -3) + 'c';
+      if (tok.endsWith('ghe') || tok.endsWith('ghi')) return tok.slice(0, -3) + 'g';
+      if (/[aeiou]$/.test(tok)) return tok.slice(0, -1);
+      return tok;
+    }
+
+    function tokenizeSearchText(str, turbo) {
+      const norm = normalize(str, turbo);
+      if (!norm) return [];
+      const rawParts = norm.split(/[^a-z0-9.]+/).filter(Boolean);
+      const out = [];
+      for (let i = 0; i < rawParts.length; i++) {
+        const p = rawParts[i];
+        out.push(p);
+        const sub = p.match(/[a-z]+|[0-9]+(?:\.[0-9]+)?/g);
+        if (sub && sub.length > 1) {
+          for (let j = 0; j < sub.length; j++) out.push(sub[j]);
+        }
+      }
+      return out;
+    }
+
+    function processToken(w, turbo) { return normalize(w, turbo); }
+
+    function adaptiveMaxDist(word) {
+      if (!word) return 0;
+      const isCodeLike = /^[a-z0-9.]+$/i.test(word) && /\d/.test(word);
+      if (isCodeLike || word.length < 5) return 0;
+      if (word.length <= 9) return 1;
+      return 2;
+    }
+
+    function bigramOverlapOk(a, b, maxDist) {
+      if (a.length < 5 || b.length < 5) return true;
+      if (a.charAt(0) !== b.charAt(0)) return false;
+      const bigramsA = new Set();
+      for (let i = 0; i < a.length - 1; i++) bigramsA.add(a.slice(i, i + 2));
+      let shared = 0;
+      for (let i = 0; i < b.length - 1; i++) {
+        if (bigramsA.has(b.slice(i, i + 2))) shared++;
+      }
+      const totalBigrams = Math.max(1, Math.min(a.length, b.length) - 1);
+      const minRatio = maxDist === 2 ? 0.55 : 0.45;
+      return shared >= Math.max(2, Math.ceil(totalBigrams * minRatio));
+    }
+
+    function damerauLevenshteinBounded(a, b, maxDist) {
+      const la = a.length, lb = b.length;
+      if (Math.abs(la - lb) > maxDist) return maxDist + 1;
+      if (la === 0) return lb;
+      if (lb === 0) return la;
+      const matrix = Array.from({ length: lb + 1 }, (_, i) => {
+        const row = new Array(la + 1);
+        row[0] = i;
+        return row;
+      });
+      for (let j = 0; j <= la; j++) matrix[0][j] = j;
+      for (let i = 1; i <= lb; i++) {
+        let rowMin = maxDist + 1;
+        for (let j = 1; j <= la; j++) {
+          const cost = b.charAt(i - 1) === a.charAt(j - 1) ? 0 : 1;
+          let val = Math.min(
+            matrix[i - 1][j] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j - 1] + cost
+          );
+          if (i > 1 && j > 1 && b.charAt(i - 1) === a.charAt(j - 2) && b.charAt(i - 2) === a.charAt(j - 1)) {
+            val = Math.min(val, matrix[i - 2][j - 2] + cost);
+          }
+          matrix[i][j] = val;
+          if (val < rowMin) rowMin = val;
+        }
+        if (rowMin > maxDist) return maxDist + 1;
+      }
+      return matrix[lb][la];
+    }
+
+    function resolveTokenMatches(queryWord, turbo) {
+      const matchedItems = new Map();
+      if (!queryWord) return matchedItems;
+
+      if (!turbo) {
+        for (let idx = 0; idx < items.length; idx++) {
+          if (items[idx].searchNorm.includes(queryWord)) {
+            matchedItems.set(idx, 100);
+          }
+        }
+        return matchedItems;
+      }
+
+      const maxDist = adaptiveMaxDist(queryWord);
+      const qStem = stemItalianTech(queryWord);
+
+      for (let t = 0; t < uniqueNormTokens.length; t++) {
+        const cand = uniqueNormTokens[t];
+        let score = 0;
+        if (cand === queryWord) {
+          score = 100;
+        } else if (cand.startsWith(queryWord)) {
+          score = 85;
+        } else if (queryWord.length >= 3 && cand.includes(queryWord)) {
+          score = 75;
+        } else if (qStem.length >= 4 && tokenStems.get(cand) === qStem) {
+          score = 70;
+        } else if (maxDist > 0 && Math.abs(cand.length - queryWord.length) <= maxDist && bigramOverlapOk(queryWord, cand, maxDist)) {
+          const dist = damerauLevenshteinBounded(queryWord, cand, maxDist);
+          if (dist <= maxDist) {
+            score = dist === 1 ? 55 : 40;
+          }
+        }
+
+        if (score > 0) {
+          const posting = invertedIndex.get(cand);
+          if (posting) {
+            posting.forEach(itemIdx => {
+              const prev = matchedItems.get(itemIdx) || 0;
+              if (score > prev) matchedItems.set(itemIdx, score);
+            });
+          }
+        }
+      }
+      return matchedItems;
+    }
+
+    function rebuildNorm() {
+      clearQueryCache();
+      invertedIndex = new Map();
+      tokenStems = new Map();
+      items.forEach((item, idx) => {
+        const fullText = (estesaOn
+          ? [item.settore, item.capitolo, item.sint, item.estesa, item.descrizione, item.codice]
+          : [item.settore, item.capitolo, item.sint, item.descrizione, item.codice]
+        ).filter(Boolean).join(' ');
+        item.searchNorm = normalize(fullText, turboOn);
+        const tokens = tokenizeSearchText(fullText, turboOn);
+        const seenInItem = new Set();
+        for (let i = 0; i < tokens.length; i++) {
+          const tok = tokens[i];
+          if (seenInItem.has(tok)) continue;
+          seenInItem.add(tok);
+          let set = invertedIndex.get(tok);
+          if (!set) {
+            set = new Set();
+            invertedIndex.set(tok, set);
+            tokenStems.set(tok, stemItalianTech(tok));
+          }
+          set.add(idx);
+        }
+      });
+      uniqueNormTokens = Array.from(invertedIndex.keys());
+    }
+
+    fileInput.addEventListener('change', function(e) {
+      if (!e.target.files || e.target.files.length === 0) return;
+      importListinoFiles(e.target.files);
+      e.target.value = '';
+    });
+
+    function flattenPrezzario(data) {
+      const result = [];
+      settoreOrder = [];
+      capitoloOrder = [];
+      paragrafoOrder = [];
+      (data.settori || []).forEach(sett => {
+        const settore = String(sett.desc || '').trim() || '(Senza settore)';
+        if (!settoreOrder.includes(settore)) settoreOrder.push(settore);
+        const settoreCod = sett.cod || '';
+        (sett.capitoli || []).forEach(cap => {
+          const capitolo = String(cap.desc || '').trim() || '(Senza capitolo)';
+          if (!capitoloOrder.includes(capitolo)) capitoloOrder.push(capitolo);
+          const capitoloCod = cap.cod || '';
+          (cap.paragrafi || []).forEach(par => {
+            const sint = String(par.sint || '').trim();
+            const estesa = String(par.estesa || '').trim();
+            const parCod = String(par.cod || '').trim() || '(Senza paragrafo)';
+            if (!paragrafoOrder.includes(parCod)) paragrafoOrder.push(parCod);
+            (par.prezzi || []).forEach(pr => {
+              result.push({
+                codice: pr.cod || '', descrizione: pr.testo || '', um: pr.umi || '',
+                prezzo: parsePrezzoVal(pr.val), man: pr.man || '',
+                settore, settoreCod, capitolo, capitoloCod, paragrafoCod: parCod, sint, estesa, searchNorm: ''
+              });
+            });
+          });
+        });
+      });
+      return result;
+    }
+
+    function afterLoad() {
+      orOn = false;
+      if (btnOr) {
+        btnOr.classList.remove('active');
+        btnOr.setAttribute('aria-checked', 'false');
+      }
+      const btnMobOrInit = document.getElementById('btnMobileOr');
+      if (btnMobOrInit) btnMobOrInit.classList.remove('active');
+      selectedListini.clear();
+      selectedSettori.clear();
+      selectedCapitoli.clear();
+      selectedParagrafi.clear();
+      expandedTreeNodes.clear();
+      buildVocab();
+      populatePresetFilterSelectors();
+      if (Array.isArray(presetFiltersConfig) && presetFiltersConfig.length > 0) {
+        customPresetFiltersOn = true;
+        applyPresetFiltersToState();
+        expandedTreeNodes.clear();
+      } else {
+        customPresetFiltersOn = false;
+      }
+      applyFilters();
+    }
+
+    function getItemSetKey(item) {
+      return (item.listinoId || 'default') + '||' + (item.settore || '');
+    }
+    function getItemCapKey(item) {
+      return (item.listinoId || 'default') + '||' + (item.settore || '') + '||' + (item.capitolo || '');
+    }
+    function getItemParKey(item) {
+      return (item.listinoId || 'default') + '||' + (item.settore || '') + '||' + (item.capitolo || '') + '||' + (item.paragrafoCod || '');
+    }
+
+    function isEmptyHierarchyLabel(val, type) {
+      if (!val) return true;
+      const v = String(val).trim().toLowerCase();
+      if (!v) return true;
+      if (type === 'settore' && v === '(senza settore)') return true;
+      if (type === 'capitolo' && v === '(senza capitolo)') return true;
+      if (type === 'paragrafo' && v === '(senza paragrafo)') return true;
+      return false;
+    }
+
+    function updateLists(baseList) {
+      const treeContainer = document.getElementById('navTreeContainer');
+      if (!treeContainer) return;
+
+      if (loadedListini.length === 0) {
+        treeContainer.innerHTML = '<div style="padding:10px; color:#6B7280;">Nessun listino caricato.</div>';
+        return;
+      }
+
+      const q = searchInput ? searchInput.value.trim() : '';
+      const isSearching = q.length > 0;
+      const showListinoRoot = loadedListini.length >= 2;
+      const hasAnySelectedFilter = selectedListini.size > 0 || selectedSettori.size > 0 || selectedCapitoli.size > 0 || selectedParagrafi.size > 0;
+      const filterOnlySelected = onlySelectedTreeOn && hasAnySelectedFilter;
+
+      const rootNodesMap = new Map();
+      const autoExpandKeys = new Set();
+
+      function getOrCreateNode(map, key, type, val, label, orderIdx, sortCode = '') {
+        if (!map.has(key)) {
+          map.set(key, {
+            key,
+            type,
+            val,
+            label,
+            orderIdx,
+            sortCode,
+            count: 0,
+            children: new Map()
+          });
+        }
+        const node = map.get(key);
+        if (!node.sortCode && sortCode) node.sortCode = sortCode;
+        node.count++;
+        return node;
+      }
+
+      baseList.forEach(item => {
+        const lstId = item.listinoId || 'default';
+        const lstObj = loadedListini.find(l => l.id === lstId);
+        const lstLabel = lstObj ? lstObj.name : 'Listino';
+        const lstOrder = loadedListini.findIndex(l => l.id === lstId);
+        const lstColor = lstObj ? lstObj.color : null;
+
+        let currentMap = rootNodesMap;
+        const pathKeys = [];
+
+        if (showListinoRoot) {
+          const lstKey = 'lst:' + lstId;
+          const lstNode = getOrCreateNode(currentMap, lstKey, 'listino', lstId, lstLabel, lstOrder, String(lstOrder));
+          lstNode.listinoColor = lstColor;
+          currentMap = lstNode.children;
+          pathKeys.push(lstKey);
+        }
+
+        if (!isEmptyHierarchyLabel(item.settore, 'settore')) {
+          const setVal = getItemSetKey(item);
+          const setKey = 'set:' + setVal;
+          const setOrder = settoreOrder.indexOf(item.settore);
+          const setNode = getOrCreateNode(currentMap, setKey, 'settore', setVal, item.settore, setOrder >= 0 ? setOrder : 999999, item.settoreCod || item.settore);
+          currentMap = setNode.children;
+          pathKeys.push(setKey);
+        }
+
+        if (!isEmptyHierarchyLabel(item.capitolo, 'capitolo')) {
+          const capVal = getItemCapKey(item);
+          const capKey = 'cap:' + capVal;
+          const capOrder = capitoloOrder.indexOf(item.capitolo);
+          const capNode = getOrCreateNode(currentMap, capKey, 'capitolo', capVal, item.capitolo, capOrder >= 0 ? capOrder : 999999, item.capitoloCod || item.capitolo);
+          currentMap = capNode.children;
+          pathKeys.push(capKey);
+        }
+
+        if (isSearching && pathKeys.length > 0) {
+          pathKeys.forEach(pk => autoExpandKeys.add(pk));
+        }
+      });
+
+      function isNodeSelected(type, val) {
+        if (type === 'listino') return selectedListini.has(val);
+        if (type === 'settore') return selectedSettori.has(val);
+        if (type === 'capitolo') return selectedCapitoli.has(val);
+        if (type === 'paragrafo') return selectedParagrafi.has(val);
+        return false;
+      }
+
+      function hasSelectedDescendant(node) {
+        for (const child of node.children.values()) {
+          if (isNodeSelected(child.type, child.val) || hasSelectedDescendant(child)) return true;
+        }
+        return false;
+      }
+
+      function renderTreeLevel(nodesMap, depth, ancestorSelected) {
+        const sortedNodes = Array.from(nodesMap.values()).sort((a, b) => {
+          if (a.type === 'listino' || b.type === 'listino') {
+            return a.orderIdx - b.orderIdx;
+          }
+          const codeA = a.sortCode || a.label;
+          const codeB = b.sortCode || b.label;
+          const cmpCode = String(codeA).localeCompare(String(codeB), 'it', { numeric: true, sensitivity: 'base' });
+          if (cmpCode !== 0) return cmpCode;
+          return a.label.localeCompare(b.label, 'it', { numeric: true, sensitivity: 'base' });
+        });
+        let html = '';
+        for (const node of sortedNodes) {
+          const hasKids = node.children.size > 0;
+          const isSelected = isNodeSelected(node.type, node.val);
+          const hasSelChild = !isSelected && hasKids && hasSelectedDescendant(node);
+
+          if (filterOnlySelected && !isSelected && !hasSelChild) {
+            continue;
+          }
+
+          const isExpanded = hasKids && (expandedTreeNodes.has(node.key) || (isSearching && autoExpandKeys.has(node.key)) || hasSelChild);
+
+          const toggleHtml = hasKids
+            ? `<button type="button" class="nav-toggle-btn" data-toggle-key="${escapeHtml(node.key)}" title="${isExpanded ? 'Comprimi ramo' : 'Espandi ramo'}" aria-label="${isExpanded ? 'Comprimi' : 'Espandi'}">${isExpanded ? '−' : '+'}</button>`
+            : `<span class="nav-toggle-spacer" aria-hidden="true">•</span>`;
+
+          const dotHtml = (node.type === 'listino' && node.listinoColor)
+            ? `<span class="listino-dot" style="background:${node.listinoColor};"></span>`
+            : '';
+
+          const activeCls = isSelected ? ' active' : (hasSelChild ? ' has-active-descendant' : '');
+
+          html += `<div class="nav-node-wrap">`;
+          html += `<div class="nav-node-row" style="--depth:${depth};">`;
+          html += toggleHtml;
+          html += `<div class="nav-node-chip${activeCls}" data-node-key="${escapeHtml(node.key)}" data-type="${node.type}" data-val="${escapeHtml(node.val)}" role="treeitem" aria-selected="${isSelected}">`;
+          html += `<span class="nav-node-label">${dotHtml}${escapeHtml(node.label)}</span>`;
+          html += `<span class="nav-node-count">(${formatNumber(node.count)})</span>`;
+          html += `</div></div>`;
+
+          if (hasKids && isExpanded) {
+            html += `<div class="nav-node-children">${renderTreeLevel(node.children, depth + 1, ancestorSelected || isSelected)}</div>`;
+          }
+          html += `</div>`;
+        }
+        return html;
+      }
+
+      if (rootNodesMap.size === 0) {
+        treeContainer.innerHTML = '<div style="padding:10px; color:#6B7280;">Nessun ramo corrispondente alla ricerca.</div>';
+      } else {
+        treeContainer.innerHTML = renderTreeLevel(rootNodesMap, 0, false);
+      }
+
+      treeContainer.querySelectorAll('.nav-toggle-btn[data-toggle-key]').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const key = btn.dataset.toggleKey;
+          if (expandedTreeNodes.has(key)) {
+            expandedTreeNodes.delete(key);
+          } else {
+            expandedTreeNodes.add(key);
+          }
+          updateLists(baseList);
+        });
+      });
+
+      // 7.1 Apertura automatica livello figlio + mutua esclusione padre/figlio
+      treeContainer.querySelectorAll('.nav-node-chip').forEach(chip => {
+        chip.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const type = chip.dataset.type;
+          const val = chip.dataset.val;
+          const nodeKey = chip.dataset.nodeKey;
+          let activated = false;
+          if (type === 'listino') {
+            if (selectedListini.has(val)) {
+              selectedListini.delete(val);
+            } else {
+              selectedListini.add(val);
+              activated = true;
+              const prefix = val + '||';
+              Array.from(selectedSettori).forEach(s => { if (s.startsWith(prefix)) selectedSettori.delete(s); });
+              Array.from(selectedCapitoli).forEach(c => { if (c.startsWith(prefix)) selectedCapitoli.delete(c); });
+              Array.from(selectedParagrafi).forEach(p => { if (p.startsWith(prefix)) selectedParagrafi.delete(p); });
+            }
+          } else if (type === 'settore') {
+            if (selectedSettori.has(val)) {
+              selectedSettori.delete(val);
+            } else {
+              selectedSettori.add(val);
+              activated = true;
+              const lstId = val.split('||')[0];
+              if (lstId) selectedListini.delete(lstId);
+              const prefix = val + '||';
+              Array.from(selectedCapitoli).forEach(c => { if (c.startsWith(prefix)) selectedCapitoli.delete(c); });
+              Array.from(selectedParagrafi).forEach(p => { if (p.startsWith(prefix)) selectedParagrafi.delete(p); });
+            }
+          } else if (type === 'capitolo') {
+            if (selectedCapitoli.has(val)) {
+              selectedCapitoli.delete(val);
+            } else {
+              selectedCapitoli.add(val);
+              activated = true;
+              const parts = val.split('||');
+              const lstId = parts[0];
+              const setKeyVal = parts.slice(0, 2).join('||');
+              if (lstId) selectedListini.delete(lstId);
+              if (setKeyVal) selectedSettori.delete(setKeyVal);
+              const prefix = val + '||';
+              Array.from(selectedParagrafi).forEach(p => { if (p.startsWith(prefix)) selectedParagrafi.delete(p); });
+            }
+          } else if (type === 'paragrafo') {
+            if (selectedParagrafi.has(val)) {
+              selectedParagrafi.delete(val);
+            } else {
+              selectedParagrafi.add(val);
+              activated = true;
+              const parts = val.split('||');
+              const lstId = parts[0];
+              const setKeyVal = parts.slice(0, 2).join('||');
+              const capKeyVal = parts.slice(0, 3).join('||');
+              if (lstId) selectedListini.delete(lstId);
+              if (setKeyVal) selectedSettori.delete(setKeyVal);
+              if (capKeyVal) selectedCapitoli.delete(capKeyVal);
+            }
+          }
+          if (activated && nodeKey) {
+            expandedTreeNodes.add(nodeKey);
+          }
+          applyFilters();
+        });
+      });
+    }
+
+    function formatNumber(n) { return n.toLocaleString('it-IT'); }
+
+    function runIndexedTextSearch(q) {
+      if (!q) return items;
+      const cacheKey = (turboOn ? '1' : '0') + '|' + (estesaOn ? '1' : '0') + '|' + (orOn ? '1' : '0') + '|' + q;
+      if (queryCache.has(cacheKey)) return queryCache.get(cacheKey);
+      const rawWords = q.split(/\s+/).filter(Boolean);
+      const includeWords = [];
+      const excludeWords = [];
+      rawWords.forEach(rw => {
+        if (rw.startsWith('-') && rw.length > 1) excludeWords.push(processToken(rw.slice(1), turboOn));
+        else includeWords.push(processToken(rw, turboOn));
+      });
+      let candidateScores = new Map();
+      if (includeWords.length === 0) {
+        for (let i = 0; i < items.length; i++) candidateScores.set(i, 50);
+      } else if (orOn) {
+        for (let wIdx = 0; wIdx < includeWords.length; wIdx++) {
+          resolveTokenMatches(includeWords[wIdx], turboOn).forEach((score, itemIdx) => {
+            candidateScores.set(itemIdx, (candidateScores.get(itemIdx) || 0) + score);
+          });
+        }
+      } else {
+        resolveTokenMatches(includeWords[0], turboOn).forEach((score, itemIdx) => candidateScores.set(itemIdx, score));
+        for (let wIdx = 1; wIdx < includeWords.length; wIdx++) {
+          if (candidateScores.size === 0) break;
+          const nextMap = resolveTokenMatches(includeWords[wIdx], turboOn);
+          const nextCandidates = new Map();
+          candidateScores.forEach((accScore, itemIdx) => {
+            if (nextMap.has(itemIdx)) nextCandidates.set(itemIdx, accScore + nextMap.get(itemIdx));
+          });
+          candidateScores = nextCandidates;
+        }
+      }
+      if (excludeWords.length > 0 && candidateScores.size > 0) {
+        for (let eIdx = 0; eIdx < excludeWords.length; eIdx++) {
+          resolveTokenMatches(excludeWords[eIdx], false).forEach((_, itemIdx) => candidateScores.delete(itemIdx));
+        }
+      }
+      const matched = [];
+      candidateScores.forEach((score, itemIdx) => { const it = items[itemIdx]; it._score = score; matched.push(it); });
+      if (queryCache.size >= MAX_QUERY_CACHE) queryCache.delete(queryCache.keys().next().value);
+      queryCache.set(cacheKey, matched);
+      return matched;
+    }
+
+    function compareByOfficialCode(a, b) {
+      const idxA = loadedListini.findIndex(l => l.id === a.listinoId);
+      const idxB = loadedListini.findIndex(l => l.id === b.listinoId);
+      if (idxA !== idxB) {
+        return (idxA < 0 ? 999999 : idxA) - (idxB < 0 ? 999999 : idxB);
+      }
+      const cmp = (s1, s2) => String(s1 || '').localeCompare(String(s2 || ''), 'it', { numeric: true, sensitivity: 'base' });
+      let res = cmp(a.settoreCod || a.settore, b.settoreCod || b.settore);
+      if (res !== 0) return res;
+      res = cmp(a.capitoloCod || a.capitolo, b.capitoloCod || b.capitolo);
+      if (res !== 0) return res;
+      res = cmp(a.paragrafoCod, b.paragrafoCod);
+      if (res !== 0) return res;
+      return cmp(a.codice || a.descrizione, b.codice || b.descrizione);
+    }
+
+    function compareItemsByColumn(a, b, col, dir) {
+      const mult = dir === 'desc' ? -1 : 1;
+      if (col === 'prezzo') {
+        return ((a.prezzo || 0) - (b.prezzo || 0)) * mult;
+      }
+      if (col === 'man') {
+        const ma = parseFloat(String(a.man || '0').replace(',', '.')) || 0;
+        const mb = parseFloat(String(b.man || '0').replace(',', '.')) || 0;
+        return (ma - mb) * mult;
+      }
+      const getVal = (it) => {
+        if (col === 'settore') return it.settore || '';
+        if (col === 'capitolo') return it.capitolo || '';
+        if (col === 'paragrafo') return it.sint || it.paragrafoCod || '';
+        if (col === 'um') return it.um || '';
+        return it.descrizione || '';
+      };
+      return getVal(a).localeCompare(getVal(b), 'it', { numeric: true, sensitivity: 'base' }) * mult;
+    }
+
+    function applyFilters() {
+      const q = searchInput.value.trim();
+      const searchFiltered = runIndexedTextSearch(q);
+      let filtered = searchFiltered;
+      const hasAnyTreeFilter = selectedListini.size > 0 || selectedSettori.size > 0 || selectedCapitoli.size > 0 || selectedParagrafi.size > 0;
+      if (hasAnyTreeFilter) {
+        filtered = filtered.filter(i => {
+          if (selectedParagrafi.has(getItemParKey(i))) return true;
+          if (selectedCapitoli.has(getItemCapKey(i))) return true;
+          if (selectedSettori.has(getItemSetKey(i))) return true;
+          if (selectedListini.has(i.listinoId)) return true;
+          return false;
+        });
+      }
+      const isMobileView = isMobilePortrait();
+      if (!isMobileView && sortMode === 'custom') {
+        filtered = filtered.slice().sort((a, b) => compareItemsByColumn(a, b, sortCol, sortDir));
+      } else if (sortMode === 'listino') {
+        filtered = filtered.slice().sort(compareByOfficialCode);
+      } else if (orOn && q) {
+        filtered = filtered.slice().sort((a, b) => ((b._score || 0) - (a._score || 0)));
+      } else {
+        filtered = filtered.slice().sort(compareByOfficialCode);
+      }
+      const hasSearch = q.length > 0 || hasAnyTreeFilter;
+      syncCustomPresetFiltersUI();
+      syncSortUI();
+      updateLists(searchFiltered);
+      const nFiltri = selectedListini.size + selectedSettori.size + selectedCapitoli.size + selectedParagrafi.size;
+      const allCleared = (nFiltri === 0 && !customPresetFiltersOn);
+      if (btnClearFilters) {
+        btnClearFilters.classList.toggle('active', allCleared);
+        btnClearFilters.setAttribute('aria-checked', String(allCleared));
+      }
+      const fixedTabEl = document.getElementById('btnNavFixedTab');
+      if (fixedTabEl) fixedTabEl.classList.toggle('has-filters', nFiltri > 0);
+      const countFormatted = formatNumber(filtered.length);
+      resultCount.textContent = countFormatted;
+      const mobRes = document.getElementById('mobResultCount');
+      if (mobRes) mobRes.textContent = countFormatted;
+      const hasTextQuery = searchInput.value.trim().length > 0;
+      const isOverLimit = hasTextQuery && (filtered.length > (maxResults || 1500));
+      const deskPill = document.getElementById('desktopCounterPill');
+      const deskWarn = document.getElementById('desktopOverLimitBadge');
+      const mobPill = document.getElementById('mobCounterPill');
+      const mobWarn = document.getElementById('mobOverLimitBadge');
+      if (deskPill) deskPill.style.display = isOverLimit ? 'none' : 'inline-flex';
+      if (deskWarn) deskWarn.style.display = isOverLimit ? 'inline-flex' : 'none';
+      if (mobPill) mobPill.style.display = isOverLimit ? 'none' : 'inline-flex';
+      if (mobWarn) mobWarn.style.display = isOverLimit ? 'inline-flex' : 'none';
+      renderResults(filtered, q, hasSearch);
+    }
+
+    function formatPrice(num) {
+      if (isNaN(num)) return '';
+      const fixed = num.toFixed(2).replace('.', ',');
+      const parts = fixed.split(',');
+      const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      return '<span class="int">' + intPart + '</span><span class="dec">,' + parts[1] + '</span>';
+    }
+
+    function renderResults(list, query, hasSearch) {
+      if ((!query || !query.trim()) && !hasSearch) { contentEl.innerHTML = ''; updateGridFloatButtons(); return; }
+      if (list.length === 0) { contentEl.innerHTML = '<div class="no-results">Nessun risultato.</div>'; updateGridFloatButtons(); return; }
+      currentShown = list.slice(0, maxResults);
+      const showDot = loadedListini.length >= 2;
+      let html = '';
+      let prev = { settore: '', capitolo: '', paragrafoCod: '', descrizione: '', um: '', prezzo: '', man: '' };
+      currentShown.forEach((item, idx) => {
+        const vals = {
+          settore: item.settore || '',
+          capitolo: item.capitolo || '',
+          paragrafoCod: item.paragrafoCod || '',
+          descrizione: item.descrizione || '',
+          um: item.um || '',
+          prezzo: item.prezzo,
+          man: item.man || ''
+        };
+        const nextItem = currentShown[idx + 1];
+        const nextSettore = nextItem ? (nextItem.settore || '') : null;
+        const nextCapitolo = nextItem ? (nextItem.capitolo || '') : null;
+        const dupClass = (key) => vals[key] === prev[key] ? ' dup' : '';
+        const settoreBottomBorder = (nextItem && vals.settore !== nextSettore) ? ' cell-bottom' : '';
+        const capitoloBottomBorder = (nextItem && (vals.capitolo !== nextCapitolo || vals.settore !== nextSettore)) ? ' cell-bottom' : '';
+        const isMobRow = isMobilePortrait();
+        const rowCols = isMobRow ? '80% 20%' : getDesktopColsTemplate();
+        const dotHtml = showDot && item.listinoColor ? `<span class="listino-dot" style="background:${item.listinoColor};" title="${escapeHtml(item.listinoFilename || '')}"></span>` : '';
+        html += '<div class="list-row" data-idx="' + idx + '" style="grid-template-columns:' + rowCols + '">';
+        if (!isMobRow) {
+          html += '<div class="settore' + dupClass('settore') + settoreBottomBorder + '">' + escapeHtml(vals.settore) + '</div>';
+          html += '<div class="capitolo' + dupClass('capitolo') + capitoloBottomBorder + '">' + escapeHtml(vals.capitolo) + '</div>';
+        }
+        const descIsDup = (vals.descrizione === prev.descrizione && vals.settore === prev.settore && vals.capitolo === prev.capitolo && vals.paragrafoCod === prev.paragrafoCod) ? ' dup' : '';
+        html += '<div class="articolo' + descIsDup + ' cell-bottom">' + dotHtml + highlight(vals.descrizione, query) + '</div>';
+        html += '<div class="um cell-bottom">' + escapeHtml(vals.um) + '</div>';
+        html += '<div class="prezzo cell-bottom">€ ' + formatPrice(vals.prezzo) + '</div>';
+        if (!isMobRow) {
+          html += '<div class="um' + dupClass('man') + ' cell-bottom">' + (vals.man ? parseFloat(vals.man).toFixed(2).replace('.', ',') + '%' : '') + '</div>';
+        }
+        html += '</div>';
+        prev = vals;
+      });
+      if (list.length > maxResults) {
+        html += `<div class="grid-max-notice">Mostrati i primi ${formatNumber(maxResults)} articoli di ${formatNumber(list.length)} — articoli visualizzabili = max ${formatNumber(maxResults)}</div>`;
+      }
+      contentEl.innerHTML = html;
+      updateGridFloatButtons();
+    }
+
+    function updateGridFloatButtons() {
+      const btnTop = document.getElementById('btnGridFloatTop');
+      const btnBot = document.getElementById('btnGridFloatBottom');
+      if (!btnTop || !btnBot || !contentEl) return;
+      const hasScroll = contentEl.scrollHeight > contentEl.clientHeight + 20;
+      btnTop.classList.toggle('visible', hasScroll && contentEl.scrollTop > 10);
+      btnBot.classList.toggle('visible', hasScroll && (contentEl.scrollTop + contentEl.clientHeight < contentEl.scrollHeight - 10));
+    }
+
+    document.getElementById('btnGridFloatTop')?.addEventListener('click', () => {
+      contentEl.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    document.getElementById('btnGridFloatBottom')?.addEventListener('click', () => {
+      contentEl.scrollTo({ top: contentEl.scrollHeight, behavior: 'smooth' });
+    });
+    contentEl.addEventListener('scroll', updateGridFloatButtons, { passive: true });
+    window.addEventListener('resize', updateGridFloatButtons);
+
+    let hoveredRowIdx = -1;
+    function clearTreeHoverHighlights() {
+      const treeContainer = document.getElementById('navTreeContainer');
+      if (!treeContainer) return;
+      treeContainer.querySelectorAll('.nav-node-chip.is-row-hovered').forEach(el => el.classList.remove('is-row-hovered'));
+    }
+
+    function highlightTreeForItem(item) {
+      clearTreeHoverHighlights();
+      if (!item) return;
+      const treeContainer = document.getElementById('navTreeContainer');
+      if (!treeContainer) return;
+      const targetKeys = new Set();
+      if (item.listinoId) targetKeys.add('lst:' + item.listinoId);
+      if (item.settore && !isEmptyHierarchyLabel(item.settore, 'settore')) targetKeys.add('set:' + getItemSetKey(item));
+      if (item.capitolo && !isEmptyHierarchyLabel(item.capitolo, 'capitolo')) targetKeys.add('cap:' + getItemCapKey(item));
+      let deepestChip = null;
+      treeContainer.querySelectorAll('.nav-node-chip').forEach(chip => {
+        if (targetKeys.has(chip.dataset.nodeKey)) {
+          chip.classList.add('is-row-hovered');
+          deepestChip = chip;
+        }
+      });
+      if (deepestChip && navSidebarOpen) {
+        const cRect = treeContainer.getBoundingClientRect();
+        const elRect = deepestChip.getBoundingClientRect();
+        if (elRect.top < cRect.top || elRect.bottom > cRect.bottom) {
+          deepestChip.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }
+    }
+
+    contentEl.addEventListener('mouseover', (e) => {
+      const row = e.target.closest('.list-row');
+      if (!row) return;
+      const idx = parseInt(row.dataset.idx, 10);
+      if (idx === hoveredRowIdx) return;
+      hoveredRowIdx = idx;
+      if (!isNaN(idx) && currentShown[idx]) {
+        highlightTreeForItem(currentShown[idx]);
+      }
+    });
+
+    contentEl.addEventListener('mouseleave', () => {
+      hoveredRowIdx = -1;
+      clearTreeHoverHighlights();
+    });
+
+    contentEl.addEventListener('click', (e) => {
+      const row = e.target.closest('.list-row');
+      if (!row) return;
+      const idx = parseInt(row.dataset.idx, 10);
+      if (!isNaN(idx) && currentShown[idx]) showCard(currentShown[idx]);
+    });
+
+    function showCard(item) {
+      const priceText = item.prezzo.toFixed(2).replace('.', ',');
+      const promptText = getDefaultPrompt(item);
+      const siblings = item.paragrafoCod ? items.filter(i => i.paragrafoCod === item.paragrafoCod && i.listinoId === item.listinoId) : [item];
+      let detailHtml = '';
+      siblings.forEach(s => {
+        const isCurrent = s.codice === item.codice && s.descrizione === item.descrizione;
+        detailHtml += `<div class="detail-row ${isCurrent ? 'current' : ''}"><div class="detail-cod">${escapeHtml(s.codice)}</div><div>${escapeHtml(s.descrizione)}</div><div class="detail-um">${escapeHtml(s.um)}</div><div>€ ${formatPrice(s.prezzo)}</div></div>`;
+      });
+      const showDot = loadedListini.length >= 2;
+      const cardBadge = showDot && item.listinoColor
+        ? `<span style="display:inline-flex; align-items:center; gap:5px; margin-left:8px; padding:2px 7px; border-radius:999px; background:var(--bar); border:1px solid #D1D5DB; font-size:calc(var(--font-size-text) - 0.5pt); font-weight:600;"><span class="listino-dot" style="background:${item.listinoColor}; margin-right:0;"></span>${escapeHtml(item.listinoFilename || item.listinoName || '')}</span>`
+        : '';
+      cardContent.innerHTML = `
+        <div class="card-top-header">
+          <h3>Scheda articolo ${cardBadge}</h3>
+          <div class="card-top-actions">
+            <button id="btnPrintCard" class="icon-btn" type="button" title="Stampa scheda articolo su A4" aria-label="Stampa scheda articolo su A4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 6 2 18 2 18 9"/>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+              </svg>
+            </button>
+            <button id="btnCopy" class="icon-btn" type="button" title="Copia tutto" aria-label="Copia tutto">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+            <button id="btnAi" class="icon-btn" type="button" title="Cerca Info AI" aria-label="Cerca Info AI">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3l1.9 5.8L19.7 10.7l-5.8 1.9L12 18.4l-1.9-5.8-5.8-1.9 5.8-1.9L12 3z"/>
+                <path d="M19 3v4"/>
+                <path d="M17 5h4"/>
+                <path d="M5 17v4"/>
+                <path d="M3 19h4"/>
+              </svg>
+            </button>
+            <button class="card-close" id="btnClose" type="button" title="Chiudi scheda" aria-label="Chiudi scheda">×</button>
+          </div>
+        </div>
+        <div class="card-fields-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            ${item.settore ? `<div class="card-row"><span class="card-label">Settore</span><span class="card-value" style="font-weight:normal;">${escapeHtml(item.settore)}</span></div>` : ''}
+            ${item.capitolo ? `<div class="card-row"><span class="card-label">Capitolo</span><span class="card-value" style="font-weight:bold;">${escapeHtml(item.capitolo)}</span></div>` : ''}
+            ${item.paragrafoCod ? `<div class="card-row"><span class="card-label">Paragrafo</span><span class="card-value" style="font-weight:normal;">${escapeHtml(item.paragrafoCod)}</span></div>` : ''}
+            ${item.sint ? `<div class="card-row"><span class="card-label">Paragrafo Sintetico</span><span class="card-value" style="font-weight:normal;">${escapeHtml(item.sint)}</span></div>` : ''}
+          </div>
+          <div>
+            ${item.codice ? `<div class="card-row"><span class="card-label">Codice Descrizione</span><span class="card-value">${escapeHtml(item.codice)}</span></div>` : ''}
+            ${item.descrizione ? `<div class="card-row"><span class="card-label">Descrizione</span><span class="card-value">${escapeHtml(item.descrizione)}</span></div>` : ''}
+            ${item.estesa ? `<div class="card-row"><span class="card-label">Descrizione Estesa</span><span class="card-value" style="font-weight:bold; text-align:justify; line-height:1.4;">${escapeHtml(item.estesa)}</span></div>` : ''}
+            <div class="card-inline">
+              ${item.um ? `<div><span class="card-label">UM</span><span class="card-value">${escapeHtml(item.um)}</span></div>` : ''}
+              <div><span class="card-label">Prezzo</span><span class="card-value">€ ${priceText}</span></div>
+              ${item.man ? `<div><span class="card-label">% Manodopera</span><span class="card-value">${escapeHtml(item.man)}</span></div>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div style="font-weight:bold; margin:8px 0;">Elenco Articoli della stessa Famiglia (Paragrafo):</div>
+        <div class="detail-grid">${detailHtml}</div>
+      `;
+      modal.classList.add('show');
+      document.getElementById('btnCopy').onclick = () => {
+        const siblingsLines = siblings.map(s => {
+          const sPrice = (s.prezzo || 0).toFixed(2).replace('.', ',');
+          const marker = s.codice === item.codice && s.descrizione === item.descrizione ? '▶ ' : '- ';
+          return `${marker}${s.codice || ''} | ${s.descrizione || ''} | ${s.um || ''} | € ${sPrice}`;
+        });
+        const text = [
+          (item.listinoFilename || listinoMeta.filename) ? 'Listino: ' + (item.listinoFilename || listinoMeta.filename) : '',
+          'Settore: (' + (item.settoreCod || '') + ') ' + (item.settore || ''),
+          'Capitolo: (' + (item.capitoloCod || '') + ') ' + (item.capitolo || ''),
+          'Paragrafo: ' + (item.paragrafoCod || ''),
+          item.sint ? 'Paragrafo Sintetico: ' + item.sint : '',
+          item.estesa ? 'Descrizione Estesa: ' + item.estesa : '',
+          'Codice Descrizione: ' + (item.codice || ''),
+          'Descrizione: ' + (item.descrizione || ''),
+          'UM: ' + (item.um || ''),
+          'Prezzo: € ' + priceText,
+          item.man ? '% Manodopera: ' + item.man : '',
+          '',
+          'Elenco Articoli della stessa Famiglia (Paragrafo):',
+          ...siblingsLines
+        ].filter((line, idx, arr) => line !== '' || (idx > 0 && arr[idx - 1] !== '')).join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => alert('Copiato')).catch(() => fallbackCopy(text));
+        } else fallbackCopy(text);
+      };
+      document.getElementById('btnAi').onclick = () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(promptText).catch(() => {});
+        }
+        const q = encodeURIComponent(promptText);
+        window.open('https://www.google.com/search?udm=50&q=' + q, '_blank');
+      };
+      document.getElementById('btnPrintCard').onclick = () => window.print();
+      document.getElementById('btnClose').onclick = () => modal.classList.remove('show');
+    }
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); alert('Copiato'); } catch(e) { alert('Copia non riuscita'); }
+      document.body.removeChild(ta);
+    }
+
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+
+    function highlight(text, query) {
+      if (!query || !text) return escapeHtml(text);
+      const words = query.split(/\s+/).filter(w => w.length > 1);
+      let result = escapeHtml(text);
+      words.forEach(w => {
+        const re = new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+        result = result.replace(re, '<span class="highlight">$1</span>');
+      });
+      return result;
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    let vocabList = [];
+    const acDropdown = document.getElementById('acDropdown');
+
+    function buildVocab() {
+      const freq = new Map();
+      items.forEach(it => {
+        const raw = [it.descrizione, it.sint, it.capitolo, it.settore, it.codice].filter(Boolean).join(' ');
+        const tokens = raw.split(/[^a-zA-ZÀ-ÿ0-9.]+/);
+        tokens.forEach(tok => {
+          if (tok.length >= 3 && !/^\d+$/.test(tok)) {
+            const norm = normalize(tok, true);
+            const entry = freq.get(norm);
+            if (entry) {
+              entry.count++;
+            } else {
+              freq.set(norm, { word: tok.toLowerCase(), norm, count: 1 });
+            }
+          }
+        });
+      });
+      vocabList = Array.from(freq.values()).sort((a, b) => b.count - a.count);
+    }
+
+    function updateAutocomplete() {
+      if (!acDropdown || vocabList.length === 0) return;
+      const val = searchInput.value;
+      const match = val.match(/([^\s]+)$/);
+      if (!match || match[1].length < 2) {
+        acDropdown.classList.remove('show');
+        return;
+      }
+      const prefixRaw = match[1];
+      const prefixNorm = normalize(prefixRaw, true);
+      const matches = [];
+      for (let i = 0; i < vocabList.length; i++) {
+        const v = vocabList[i];
+        if (v.norm.startsWith(prefixNorm) && v.norm !== prefixNorm) {
+          matches.push(v);
+          if (matches.length >= 8) break;
+        }
+      }
+      if (matches.length === 0) {
+        acDropdown.classList.remove('show');
+        return;
+      }
+      acDropdown.innerHTML = matches.map(m =>
+        `<div class="ac-item" data-word="${escapeHtml(m.word)}"><span><strong>${escapeHtml(m.word.slice(0, prefixRaw.length))}</strong>${escapeHtml(m.word.slice(prefixRaw.length))}</span><span class="ac-freq">${m.count}</span></div>`
+      ).join('');
+      acDropdown.classList.add('show');
+      acDropdown.querySelectorAll('.ac-item').forEach(el => {
+        el.addEventListener('pointerdown', (ev) => {
+          ev.preventDefault();
+          const chosen = el.dataset.word;
+          searchInput.value = val.replace(/([^\s]+)$/, chosen + ' ');
+          acDropdown.classList.remove('show');
+          applyFilters();
+          searchInput.focus();
+        });
+      });
+    }
+
+    function triggerSearchFullscreen() {
+      try {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+          const docEl = document.documentElement;
+          if (docEl.requestFullscreen) {
+            docEl.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+          } else if (docEl.webkitRequestFullscreen) {
+            docEl.webkitRequestFullscreen();
+          } else if (docEl.msRequestFullscreen) {
+            docEl.msRequestFullscreen();
+          }
+        }
+      } catch (e) {}
+    }
+    searchInput.addEventListener('pointerdown', triggerSearchFullscreen);
+    searchInput.addEventListener('focus', triggerSearchFullscreen);
+
+    let timer;
+    searchInput.addEventListener('input', () => {
+      updateAutocomplete();
+      clearTimeout(timer);
+      timer = setTimeout(applyFilters, 60);
+    });
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.keyCode === 13) {
+        e.preventDefault();
+        if (acDropdown) acDropdown.classList.remove('show');
+        clearTimeout(timer);
+        applyFilters();
+        searchInput.blur();
+      } else if (e.key === 'Escape') {
+        if (acDropdown) acDropdown.classList.remove('show');
+        searchInput.blur();
+      }
+    });
+    searchInput.addEventListener('blur', () => {
+      setTimeout(() => { if (acDropdown) acDropdown.classList.remove('show'); }, 150);
+    });
+
+    const mobileFilterBadge = document.getElementById('mobileFilterBadge');
+    function updateMobileControls() {
+      const n = selectedSettori.size + selectedCapitoli.size + selectedParagrafi.size;
+      if (mobileFilterBadge) mobileFilterBadge.textContent = n + (n === 1 ? ' filtro' : ' filtri');
+      document.getElementById('btnMobileTurbo')?.classList.toggle('active', turboOn);
+      document.getElementById('btnMobileEstesa')?.classList.toggle('active', estesaOn);
+      document.getElementById('btnMobileOr')?.classList.toggle('active', orOn);
+      document.getElementById('btnMobileAnd')?.classList.toggle('active', !orOn);
+    }
+    document.getElementById('btnMobClear')?.addEventListener('click', () => btnClearFilters.click());
+    document.getElementById('btnMobileTurbo')?.addEventListener('click', () => btnTurbo.click());
+    document.getElementById('btnMobileEstesa')?.addEventListener('click', () => btnEstesa?.click());
+    document.getElementById('btnMobileAnd')?.addEventListener('click', () => { if (orOn) btnOr.click(); });
+    document.getElementById('btnMobileOr')?.addEventListener('click', (e) => { e.stopPropagation(); btnOr.click(); });
+    document.getElementById('btnMobSettings')?.addEventListener('click', () => {
+      document.getElementById('colorModal')?.classList.add('show');
+    });
+    document.getElementById('btnOptionsOpenFile')?.addEventListener('click', () => fileInput.click());
+    document.getElementById('btnOptionsGear')?.addEventListener('click', () => {
+      document.getElementById('colorModal')?.classList.add('show');
+    });
+    document.getElementById('btnCloseColor')?.addEventListener('click', () => {
+      document.getElementById('colorModal')?.classList.remove('show');
+    });
+    function isMobilePortrait() {
+      return window.matchMedia && window.matchMedia('(orientation: portrait) and (max-width: 768px)').matches;
+    }
+
+    function isMobileLandscape() {
+      return window.matchMedia && window.matchMedia('(orientation: landscape) and (max-height: 540px)').matches;
+    }
+
+    function isMobileDeviceViewport() {
+      return (window.innerWidth <= 768) || (window.innerHeight <= 540);
+    }
+
+    const desktopSearchParent = searchInput.parentElement;
+    const mobSearchSlot = document.getElementById('mobSearchSlot');
+    function syncMobileLayoutSlots() {
+      const isMobLayout = isMobilePortrait() || isMobileLandscape() || (window.innerWidth <= 768);
+      const acEl = document.getElementById('acDropdown');
+      if (isMobLayout) {
+        if (mobSearchSlot && searchInput.parentElement !== mobSearchSlot) {
+          mobSearchSlot.appendChild(searchInput);
+          if (acEl) mobSearchSlot.appendChild(acEl);
+        }
+      } else {
+        if (desktopSearchParent && searchInput.parentElement !== desktopSearchParent) {
+          desktopSearchParent.appendChild(searchInput);
+          if (acEl) desktopSearchParent.appendChild(acEl);
+        }
+      }
+      if (isMobilePortrait()) {
+        navSidebarOpen = true;
+      }
+      updateNavSidebarUI();
+    }
+
+    function updateNavSidebarUI() {
+      const sidebar = document.getElementById('navSidebar');
+      const backdrop = document.getElementById('navDrawerBackdrop');
+      const fixedTab = document.getElementById('btnNavFixedTab');
+      const portrait = isMobilePortrait();
+      const landscape = isMobileLandscape();
+      if (!sidebar) return;
+
+      if (portrait) {
+        navSidebarOpen = true;
+        sidebar.classList.remove('is-collapsed');
+        if (backdrop) backdrop.classList.remove('show');
+        if (fixedTab) fixedTab.style.display = 'none';
+        return;
+      }
+
+      sidebar.classList.toggle('is-collapsed', !navSidebarOpen);
+      if (backdrop) {
+        backdrop.classList.toggle('show', landscape && navSidebarOpen);
+      }
+      if (fixedTab) {
+        fixedTab.style.display = navSidebarOpen ? 'none' : 'flex';
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      syncMobileLayoutSlots();
+      if (items.length > 0 && (searchInput.value.trim().length > 0 || selectedListini.size > 0 || selectedSettori.size > 0 || selectedCapitoli.size > 0 || selectedParagrafi.size > 0)) {
+        applyFilters();
+      }
+    });
+
+    const originalAfterLoad = afterLoad;
+    afterLoad = function() {
+      originalAfterLoad();
+      updateMobileControls();
+      navSidebarOpen = isMobilePortrait() ? true : (isMobileLandscape() ? false : (window.innerWidth > 768));
+      syncMobileLayoutSlots();
+    };
+    const originalApplyFilters = applyFilters;
+    applyFilters = function() { originalApplyFilters(); updateMobileControls(); syncMobileLayoutSlots(); };
+
+    function getEmbeddedConfig() {
+      try {
+        const el = document.getElementById('embeddedConfig');
+        if (el && el.textContent.trim()) {
+          return JSON.parse(el.textContent.trim());
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    const FALLBACK_THEME = {
+      bg: '#FFFFFF',
+      topBar: '#F5F5F5',
+      bar: '#F5F5F5',
+      primary: '#374151',
+      accent: '#16a34a',
+      red: '#DC2626',
+      text: '#1F2937',
+      btn: '#E5E7EB',
+      btnText: '#1F2937',
+      highlight: '#d1fae5',
+      rowEven: '#F3F4F6',
+      rowHover: '#E5E7EB',
+      borderColor: '#E5E7EB',
+      gridLine: '#000000',
+      fontText: 'Inter',
+      sizeText: 9,
+      fontPrice: 'Inter',
+      sizePrice: 9,
+      iconSize: 18,
+      maxResults: 1500,
+      rowDensity: 'med',
+      showMobFullscreen: true,
+      externalListini: [
+        {
+          active: true,
+          name: 'Veneto 2026',
+          date: '2026',
+          color: '#2563EB',
+          url: 'https://raw.githubusercontent.com/enricomarcigaglia-cmyk/progetto/main/prezzario_veneto_2026.json'
+        }
+      ],
+      presetFilters: []
+    };
+
+    const DEFAULT_THEME = { ...FALLBACK_THEME, ...(getEmbeddedConfig() || {}) };
+
+    const COLOR_MAPPINGS = [
+      { picker: 'cBg', hex: 'cBgHex', cssVar: '--bg', key: 'bg' },
+      { picker: 'cTopBar', hex: 'cTopBarHex', cssVar: '--top-bar', key: 'topBar' },
+      { picker: 'cBar', hex: 'cBarHex', cssVar: '--bar', key: 'bar' },
+      { picker: 'cPrimary', hex: 'cPrimaryHex', cssVar: '--primary', key: 'primary' },
+      { picker: 'cAccent', hex: 'cAccentHex', cssVar: '--accent', key: 'accent' },
+      { picker: 'cRed', hex: 'cRedHex', cssVar: '--red', key: 'red' },
+      { picker: 'cText', hex: 'cTextHex', cssVar: '--text', key: 'text' },
+      { picker: 'cBtn', hex: 'cBtnHex', cssVar: '--btn', key: 'btn' },
+      { picker: 'cBtnText', hex: 'cBtnTextHex', cssVar: '--btn-text', key: 'btnText' },
+      { picker: 'cHighlight', hex: 'cHighlightHex', cssVar: '--highlight', key: 'highlight' },
+      { picker: 'cRowEven', hex: 'cRowEvenHex', cssVar: '--row-even', key: 'rowEven' },
+      { picker: 'cRowHover', hex: 'cRowHoverHex', cssVar: '--row-hover', key: 'rowHover' },
+      { picker: 'cBorder', hex: 'cBorderHex', cssVar: '--border-color', key: 'borderColor' },
+      { picker: 'cGridLine', hex: 'cGridLineHex', cssVar: '--grid-line', key: 'gridLine' }
+    ];
+
+    function normalizeHexColor(val, fallback) {
+      if (!val) return fallback;
+      let v = String(val).trim();
+      if (!v.startsWith('#')) v = '#' + v;
+      if (/^#[0-9a-fA-F]{6}$/.test(v)) return v.toUpperCase();
+      if (/^#[0-9a-fA-F]{3}$/.test(v)) {
+        return ('#' + v[1] + v[1] + v[2] + v[2] + v[3] + v[3]).toUpperCase();
+      }
+      return fallback;
+    }
+
+    function renderExternalListiniTable() {
+      const tbody = document.getElementById('externalListiniTbody');
+      if (!tbody) return;
+      if (!Array.isArray(externalListiniConfig) || externalListiniConfig.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#6B7280; padding:8px;">Nessun listino esterno configurato. Clicca "+ Aggiungi listino".</td></tr>';
+        return;
+      }
+      tbody.innerHTML = externalListiniConfig.map((row, idx) => `
+        <tr data-ext-idx="${idx}">
+          <td style="text-align:center;"><input type="checkbox" class="ext-active" ${row.active !== false ? 'checked' : ''} title="Includi al caricamento automatico"></td>
+          <td><input type="text" class="ext-name" value="${escapeHtml(row.name || '')}" placeholder="Nome listino"></td>
+          <td><input type="text" class="ext-date" value="${escapeHtml(row.date || '')}" placeholder="Anno/Data"></td>
+          <td style="text-align:center;"><input type="color" class="ext-color" value="${normalizeHexColor(row.color, '#2563EB')}"></td>
+          <td><input type="text" class="ext-url" value="${escapeHtml(row.url || '')}" placeholder="https://..."></td>
+          <td style="text-align:center; white-space:nowrap;">
+            <button type="button" class="ext-act-btn ext-up" title="Sposta su" ${idx === 0 ? 'disabled style="opacity:0.4;"' : ''}>↑</button>
+            <button type="button" class="ext-act-btn ext-down" title="Sposta giù" ${idx === externalListiniConfig.length - 1 ? 'disabled style="opacity:0.4;"' : ''}>↓</button>
+            <button type="button" class="ext-act-btn del ext-del" title="Elimina riga">×</button>
+          </td>
+        </tr>
+      `).join('');
+
+      tbody.querySelectorAll('tr[data-ext-idx]').forEach(tr => {
+        const idx = parseInt(tr.dataset.extIdx, 10);
+        tr.querySelector('.ext-active')?.addEventListener('change', (e) => { externalListiniConfig[idx].active = e.target.checked; });
+        tr.querySelector('.ext-name')?.addEventListener('input', (e) => { externalListiniConfig[idx].name = e.target.value; });
+        tr.querySelector('.ext-date')?.addEventListener('input', (e) => { externalListiniConfig[idx].date = e.target.value; });
+        tr.querySelector('.ext-color')?.addEventListener('input', (e) => { externalListiniConfig[idx].color = e.target.value.toUpperCase(); });
+        tr.querySelector('.ext-url')?.addEventListener('input', (e) => { externalListiniConfig[idx].url = e.target.value.trim(); });
+        tr.querySelector('.ext-up')?.addEventListener('click', () => {
+          if (idx > 0) {
+            const tmp = externalListiniConfig[idx - 1];
+            externalListiniConfig[idx - 1] = externalListiniConfig[idx];
+            externalListiniConfig[idx] = tmp;
+            renderExternalListiniTable();
+          }
+        });
+        tr.querySelector('.ext-down')?.addEventListener('click', () => {
+          if (idx < externalListiniConfig.length - 1) {
+            const tmp = externalListiniConfig[idx + 1];
+            externalListiniConfig[idx + 1] = externalListiniConfig[idx];
+            externalListiniConfig[idx] = tmp;
+            renderExternalListiniTable();
+          }
+        });
+        tr.querySelector('.ext-del')?.addEventListener('click', () => {
+          externalListiniConfig.splice(idx, 1);
+          renderExternalListiniTable();
+        });
+      });
+    }
+
+    document.getElementById('btnAddExternalListino')?.addEventListener('click', () => {
+      const nextColor = LISTINO_COLORS[externalListiniConfig.length % LISTINO_COLORS.length];
+      externalListiniConfig.push({
+        active: true,
+        name: 'Nuovo Listino',
+        date: String(new Date().getFullYear()),
+        color: nextColor,
+        url: ''
+      });
+      renderExternalListiniTable();
+    });
+
+    function getCatalogOptionsForLevel(level) {
+      const map = new Map();
+      if (level === 'listino') {
+        loadedListini.forEach(l => {
+          map.set(l.name, { value: l.name, label: `${l.name} (${l.filename})` });
+        });
+      } else if (level === 'settore') {
+        items.forEach(it => {
+          if (!isEmptyHierarchyLabel(it.settore, 'settore') && !map.has(it.settore)) {
+            const codePrefix = it.settoreCod ? `[${it.settoreCod}] ` : '';
+            map.set(it.settore, { value: it.settore, label: `${codePrefix}${it.settore}` });
+          }
+        });
+      } else if (level === 'capitolo') {
+        items.forEach(it => {
+          if (!isEmptyHierarchyLabel(it.capitolo, 'capitolo') && !map.has(it.capitolo)) {
+            const codePrefix = it.capitoloCod ? `[${it.capitoloCod}] ` : '';
+            map.set(it.capitolo, { value: it.capitolo, label: `${codePrefix}${it.capitolo}` });
+          }
+        });
+      } else if (level === 'paragrafo') {
+        items.forEach(it => {
+          if (!isEmptyHierarchyLabel(it.paragrafoCod, 'paragrafo') && !map.has(it.paragrafoCod)) {
+            const desc = it.sint ? ` - ${it.sint}` : '';
+            map.set(it.paragrafoCod, { value: it.paragrafoCod, label: `${it.paragrafoCod}${desc}` });
+          }
+        });
+      }
+      return Array.from(map.values());
+    }
+
+    function populatePresetFilterSelectors() {
+      const levelSel = document.getElementById('presetFilterLevel');
+      const searchInp = document.getElementById('presetFilterSearch');
+      const valSel = document.getElementById('presetFilterValue');
+      if (!levelSel || !valSel) return;
+      const level = levelSel.value || 'settore';
+      const q = (searchInp?.value || '').trim().toLowerCase();
+      const opts = getCatalogOptionsForLevel(level).filter(o => !q || o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q));
+      if (opts.length === 0) {
+        valSel.innerHTML = '<option value="">-- Nessuna voce disponibile --</option>';
+      } else {
+        valSel.innerHTML = opts.slice(0, 400).map(o =>
+          `<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>`
+        ).join('');
+      }
+    }
+
+    function renderPresetFiltersList() {
+      const listEl = document.getElementById('presetFiltersList');
+      if (!listEl) return;
+      if (!Array.isArray(presetFiltersConfig) || presetFiltersConfig.length === 0) {
+        listEl.innerHTML = '<span style="color:#6B7280; font-size:calc(var(--font-size-text) - 0.5pt);">Nessun filtro predefinito configurato.</span>';
+        return;
+      }
+      const levelLabels = { listino: 'Listino', settore: 'Settore', capitolo: 'Capitolo', paragrafo: 'Paragrafo' };
+      listEl.innerHTML = presetFiltersConfig.map((pf, idx) => `
+        <span class="preset-filter-chip">
+          <strong>${escapeHtml(levelLabels[pf.level] || pf.level)}:</strong>
+          <span>${escapeHtml(pf.label || pf.value)}</span>
+          <button type="button" data-pf-idx="${idx}" title="Rimuovi filtro predefinito">×</button>
+        </span>
+      `).join('');
+      listEl.querySelectorAll('button[data-pf-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.pfIdx, 10);
+          presetFiltersConfig.splice(idx, 1);
+          renderPresetFiltersList();
+          syncCustomPresetFiltersUI();
+        });
+      });
+      syncCustomPresetFiltersUI();
+    }
+
+    function removePresetFiltersFromState() {
+      if (!Array.isArray(presetFiltersConfig) || presetFiltersConfig.length === 0) return;
+      presetFiltersConfig.forEach(pf => {
+        if (!pf || !pf.level || !pf.value) return;
+        if (pf.level === 'listino') {
+          const found = loadedListini.find(l => l.name === pf.value || l.filename === pf.value || l.id === pf.value);
+          if (found) selectedListini.delete(found.id);
+        } else if (pf.level === 'settore') {
+          items.filter(i => i.settore === pf.value || i.settoreCod === pf.value)
+               .forEach(m => selectedSettori.delete(getItemSetKey(m)));
+        } else if (pf.level === 'capitolo') {
+          items.filter(i => i.capitolo === pf.value || i.capitoloCod === pf.value)
+               .forEach(m => selectedCapitoli.delete(getItemCapKey(m)));
+        } else if (pf.level === 'paragrafo') {
+          items.filter(i => i.paragrafoCod === pf.value)
+               .forEach(m => selectedParagrafi.delete(getItemParKey(m)));
+        }
+      });
+    }
+
+    function applyPresetFiltersToState() {
+      if (!Array.isArray(presetFiltersConfig) || presetFiltersConfig.length === 0) return;
+      presetFiltersConfig.forEach(pf => {
+        if (!pf || !pf.level || !pf.value) return;
+        if (pf.level === 'listino') {
+          const found = loadedListini.find(l => l.name === pf.value || l.filename === pf.value || l.id === pf.value);
+          if (found) {
+            selectedListini.add(found.id);
+            expandedTreeNodes.add('lst:' + found.id);
+          }
+        } else if (pf.level === 'settore') {
+          const matchIt = items.find(i => i.settore === pf.value || i.settoreCod === pf.value);
+          if (matchIt) {
+            const setK = getItemSetKey(matchIt);
+            selectedSettori.add(setK);
+            if (matchIt.listinoId) expandedTreeNodes.add('lst:' + matchIt.listinoId);
+            expandedTreeNodes.add('set:' + setK);
+          }
+        } else if (pf.level === 'capitolo') {
+          const matchIt = items.find(i => i.capitolo === pf.value || i.capitoloCod === pf.value);
+          if (matchIt) {
+            const setK = getItemSetKey(matchIt);
+            const capK = getItemCapKey(matchIt);
+            selectedCapitoli.add(capK);
+            if (matchIt.listinoId) expandedTreeNodes.add('lst:' + matchIt.listinoId);
+            expandedTreeNodes.add('set:' + setK);
+            expandedTreeNodes.add('cap:' + capK);
+          }
+        } else if (pf.level === 'paragrafo') {
+          const matchIt = items.find(i => i.paragrafoCod === pf.value);
+          if (matchIt) {
+            const setK = getItemSetKey(matchIt);
+            const capK = getItemCapKey(matchIt);
+            const parK = getItemParKey(matchIt);
+            selectedParagrafi.add(parK);
+            if (matchIt.listinoId) expandedTreeNodes.add('lst:' + matchIt.listinoId);
+            expandedTreeNodes.add('set:' + setK);
+            expandedTreeNodes.add('cap:' + capK);
+            expandedTreeNodes.add('par:' + parK);
+          }
+        }
+      });
+    }
+
+    document.getElementById('presetFilterLevel')?.addEventListener('change', populatePresetFilterSelectors);
+    document.getElementById('presetFilterSearch')?.addEventListener('input', populatePresetFilterSelectors);
+    document.getElementById('btnAddPresetFilter')?.addEventListener('click', () => {
+      const level = document.getElementById('presetFilterLevel')?.value || 'settore';
+      const valSel = document.getElementById('presetFilterValue');
+      const val = valSel?.value || '';
+      const label = valSel?.selectedOptions?.[0]?.textContent || val;
+      if (!val) return;
+      const exists = presetFiltersConfig.some(pf => pf.level === level && pf.value === val);
+      if (!exists) {
+        presetFiltersConfig.push({ level, value: val, label });
+        renderPresetFiltersList();
+      }
+    });
+
+    function applyThemeConfig(cfg, reRender = true) {
+      const rootStyle = document.documentElement.style;
+      COLOR_MAPPINGS.forEach(m => {
+        const val = normalizeHexColor(cfg[m.key], DEFAULT_THEME[m.key]);
+        rootStyle.setProperty(m.cssVar, val);
+        const pEl = document.getElementById(m.picker);
+        const hEl = document.getElementById(m.hex);
+        if (pEl) pEl.value = val;
+        if (hEl) hEl.value = val;
+      });
+      const fontText = cfg.fontText || DEFAULT_THEME.fontText;
+      const sizeText = Number(cfg.sizeText) || DEFAULT_THEME.sizeText;
+      const fontPrice = cfg.fontPrice || DEFAULT_THEME.fontPrice;
+      const sizePrice = Number(cfg.sizePrice) || DEFAULT_THEME.sizePrice;
+      const iconSize = Number(cfg.iconSize) || DEFAULT_THEME.iconSize;
+      maxResults = Number(cfg.maxResults) || DEFAULT_THEME.maxResults;
+      rowDensity = ['min', 'med', 'high'].includes(cfg.rowDensity) ? cfg.rowDensity : 'med';
+      document.body.classList.remove('row-density-min', 'row-density-med', 'row-density-high');
+      document.body.classList.add('row-density-' + rowDensity);
+
+      if (Array.isArray(cfg.externalListini)) {
+        externalListiniConfig = cfg.externalListini.map(x => ({ ...x }));
+      } else if (cfg.url) {
+        externalListiniConfig = [{ active: true, name: 'Veneto 2026', date: '2026', color: '#2563EB', url: cfg.url }];
+      }
+      if (Array.isArray(cfg.presetFilters)) {
+        presetFiltersConfig = cfg.presetFilters.map(x => ({ ...x }));
+      } else {
+        presetFiltersConfig = [];
+      }
+
+      rootStyle.setProperty('--font-text', `${fontText}, "Arial Narrow", Arial, sans-serif`);
+      rootStyle.setProperty('--font-size-text', `${sizeText}pt`);
+      rootStyle.setProperty('--font-price', `${fontPrice}, "Arial Narrow", Arial, sans-serif`);
+      rootStyle.setProperty('--font-size-price', `${sizePrice}pt`);
+      rootStyle.setProperty('--icon-size', `${iconSize}px`);
+
+      const elFontText = document.getElementById('cFontText');
+      const elSizeText = document.getElementById('cSizeText');
+      const elSizeTextVal = document.getElementById('cSizeTextVal');
+      const elFontPrice = document.getElementById('cFontPrice');
+      const elSizePrice = document.getElementById('cSizePrice');
+      const elSizePriceVal = document.getElementById('cSizePriceVal');
+      const elIconSize = document.getElementById('cIconSize');
+      const elIconSizeVal = document.getElementById('cIconSizeVal');
+      const elMax = document.getElementById('cMaxResults');
+
+      if (elFontText) elFontText.value = fontText;
+      if (elSizeText) elSizeText.value = sizeText;
+      if (elSizeTextVal) elSizeTextVal.textContent = sizeText + 'pt';
+      if (elFontPrice) elFontPrice.value = fontPrice;
+      if (elSizePrice) elSizePrice.value = sizePrice;
+      if (elSizePriceVal) elSizePriceVal.textContent = sizePrice + 'pt';
+      if (elIconSize) elIconSize.value = iconSize;
+      if (elIconSizeVal) elIconSizeVal.textContent = iconSize + 'px';
+      if (elMax) elMax.value = maxResults;
+      const elRowDen = document.getElementById('cRowDensity');
+      if (elRowDen) elRowDen.value = rowDensity;
+      const elTopRowDen = document.getElementById('topRowDensity');
+      if (elTopRowDen) elTopRowDen.value = rowDensity;
+      const showMobFs = cfg.showMobFullscreen !== false;
+      const elMobFs = document.getElementById('cShowMobFullscreen');
+      if (elMobFs) elMobFs.checked = showMobFs;
+      document.body.classList.toggle('hide-mob-fullscreen', !showMobFs);
+
+      renderExternalListiniTable();
+      populatePresetFilterSelectors();
+      renderPresetFiltersList();
+
+      if (reRender && items.length > 0) applyFilters();
+    }
+
+    function readThemeFromEditor() {
+      const cfg = { ...DEFAULT_THEME };
+      COLOR_MAPPINGS.forEach(m => {
+        const hEl = document.getElementById(m.hex);
+        const pEl = document.getElementById(m.picker);
+        cfg[m.key] = normalizeHexColor(hEl?.value || pEl?.value, DEFAULT_THEME[m.key]);
+      });
+      cfg.fontText = document.getElementById('cFontText')?.value || DEFAULT_THEME.fontText;
+      cfg.sizeText = Number(document.getElementById('cSizeText')?.value) || DEFAULT_THEME.sizeText;
+      cfg.fontPrice = document.getElementById('cFontPrice')?.value || DEFAULT_THEME.fontPrice;
+      cfg.sizePrice = Number(document.getElementById('cSizePrice')?.value) || DEFAULT_THEME.sizePrice;
+      cfg.iconSize = Number(document.getElementById('cIconSize')?.value) || DEFAULT_THEME.iconSize;
+      cfg.maxResults = Number(document.getElementById('cMaxResults')?.value) || DEFAULT_THEME.maxResults;
+      cfg.rowDensity = document.getElementById('cRowDensity')?.value || DEFAULT_THEME.rowDensity;
+      cfg.showMobFullscreen = document.getElementById('cShowMobFullscreen')?.checked !== false;
+      cfg.externalListini = externalListiniConfig.map(x => ({ ...x }));
+      cfg.presetFilters = presetFiltersConfig.map(x => ({ ...x }));
+      return cfg;
+    }
+
+    COLOR_MAPPINGS.forEach(m => {
+      const pEl = document.getElementById(m.picker);
+      const hEl = document.getElementById(m.hex);
+      pEl?.addEventListener('input', () => {
+        const val = pEl.value.toUpperCase();
+        if (hEl) hEl.value = val;
+        document.documentElement.style.setProperty(m.cssVar, val);
+      });
+      hEl?.addEventListener('input', () => {
+        const val = normalizeHexColor(hEl.value, null);
+        if (val) {
+          if (pEl) pEl.value = val;
+          document.documentElement.style.setProperty(m.cssVar, val);
+        }
+      });
+    });
+
+    document.getElementById('cSizeText')?.addEventListener('input', (e) => {
+      document.getElementById('cSizeTextVal').textContent = e.target.value + 'pt';
+      document.documentElement.style.setProperty('--font-size-text', e.target.value + 'pt');
+    });
+    document.getElementById('cSizePrice')?.addEventListener('input', (e) => {
+      document.getElementById('cSizePriceVal').textContent = e.target.value + 'pt';
+      document.documentElement.style.setProperty('--font-size-price', e.target.value + 'pt');
+    });
+    document.getElementById('cIconSize')?.addEventListener('input', (e) => {
+      document.getElementById('cIconSizeVal').textContent = e.target.value + 'px';
+      document.documentElement.style.setProperty('--icon-size', e.target.value + 'px');
+    });
+
+    document.getElementById('btnApplyColors')?.addEventListener('click', () => {
+      const cfg = readThemeFromEditor();
+      applyThemeConfig(cfg, true);
+      try { localStorage.setItem('listini_theme_v56', JSON.stringify(cfg)); } catch (e) {}
+      document.getElementById('colorModal')?.classList.remove('show');
+    });
+
+    // 2.3 Salva HTML aggiornato auto-contenuto con #embeddedConfig
+    document.getElementById('btnSaveHtmlUpdated')?.addEventListener('click', () => {
+      const cfg = readThemeFromEditor();
+      applyThemeConfig(cfg, true);
+      try { localStorage.setItem('listini_theme_v56', JSON.stringify(cfg)); } catch (e) {}
+
+      const embEl = document.getElementById('embeddedConfig');
+      if (embEl) {
+        embEl.textContent = JSON.stringify(cfg);
+      }
+
+      const cloneDoc = document.documentElement.cloneNode(true);
+      const cloneModal = cloneDoc.querySelector('#colorModal');
+      if (cloneModal) cloneModal.classList.remove('show');
+      const cloneCardModal = cloneDoc.querySelector('#modal');
+      if (cloneCardModal) cloneCardModal.classList.remove('show');
+      const cloneCtx = cloneDoc.querySelector('#customContextMenu');
+      if (cloneCtx) cloneCtx.classList.remove('show');
+      const cloneContent = cloneDoc.querySelector('#content');
+      if (cloneContent) cloneContent.innerHTML = '';
+      const cloneTree = cloneDoc.querySelector('#navTreeContainer');
+      if (cloneTree) cloneTree.innerHTML = '';
+      const cloneLoadedBox = cloneDoc.querySelector('#loadedListiniBox');
+      if (cloneLoadedBox) cloneLoadedBox.innerHTML = '';
+      const cloneMainApp = cloneDoc.querySelector('#mainApp');
+      if (cloneMainApp) cloneMainApp.style.display = 'none';
+      const cloneOverlay = cloneDoc.querySelector('#loadOverlay');
+      if (cloneOverlay) cloneOverlay.style.display = 'flex';
+      const cloneEmb = cloneDoc.querySelector('#embeddedConfig');
+      if (cloneEmb) cloneEmb.textContent = JSON.stringify(cfg);
+
+      const finalHtml = '<!DOCTYPE html>\n' + cloneDoc.outerHTML;
+      const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'V56_Navigator_Listini.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    });
+
+    document.getElementById('topRowDensity')?.addEventListener('change', (e) => {
+      const val = ['min', 'med', 'high'].includes(e.target.value) ? e.target.value : 'med';
+      const cfg = readThemeFromEditor();
+      cfg.rowDensity = val;
+      applyThemeConfig(cfg, true);
+      try { localStorage.setItem('listini_theme_v56', JSON.stringify(cfg)); } catch (err) {}
+    });
+
+    document.getElementById('btnResetColors')?.addEventListener('click', () => {
+      const embCfg = { ...FALLBACK_THEME, ...(getEmbeddedConfig() || {}) };
+      applyThemeConfig(embCfg, true);
+      try { localStorage.removeItem('listini_theme_v56'); } catch (e) {}
+    });
+
+    function handleViewportModeChange() {
+      if (isMobilePortrait()) {
+        navSidebarOpen = true;
+      } else if (isMobileLandscape()) {
+        navSidebarOpen = false;
+      }
+      checkWide();
+    if (window.matchMedia) {
+      const mqlPortrait = window.matchMedia('(orientation: portrait) and (max-width: 768px)');
+      const mqlLandscape = window.matchMedia('(orientation: landscape) and (max-height: 540px)');
+      if (mqlPortrait.addEventListener) {
+        mqlPortrait.addEventListener('change', handleViewportModeChange);
+        mqlLandscape.addEventListener('change', handleViewportModeChange);
+      }
+    }
+      syncMobileLayoutSlots();
+      if (items.length > 0 && (searchInput.value.trim().length > 0 || selectedListini.size > 0 || selectedSettori.size > 0 || selectedCapitoli.size > 0 || selectedParagrafi.size > 0)) {
+        applyFilters();
+      }
+    }
+
+    window.addEventListener('orientationchange', () => {
+      setTimeout(handleViewportModeChange, 120);
+    });
+    checkWide();
+
+    // Gestione Sidebar Navigazione listino (linguetta fissa, drawer mobile, ridimensionamento desktop)
+    (function initNavSidebarController() {
+      const sidebar = document.getElementById('navSidebar');
+      const resizer = document.getElementById('navResizer');
+      const fixedTab = document.getElementById('btnNavFixedTab');
+      const closeBtn = document.getElementById('btnCloseNavSidebar');
+      const backdrop = document.getElementById('navDrawerBackdrop');
+      const STORAGE_KEY = 'listini_nav_sidebar_width_px';
+
+      function applySavedSidebarWidth() {
+        try {
+          const saved = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+          if (saved && saved >= 210) {
+            const maxAllowed = Math.floor(window.innerWidth * 0.65);
+            const clamped = Math.min(saved, maxAllowed);
+            document.documentElement.style.setProperty('--nav-sidebar-width', clamped + 'px');
+          }
+        } catch (e) {}
+      }
+
+      applySavedSidebarWidth();
+      syncMobileLayoutSlots();
+
+      fixedTab?.addEventListener('click', () => {
+        navSidebarOpen = true;
+        updateNavSidebarUI();
+      });
+
+      closeBtn?.addEventListener('click', () => {
+        if (isMobilePortrait()) return;
+        navSidebarOpen = false;
+        updateNavSidebarUI();
+      });
+
+      backdrop?.addEventListener('click', () => {
+        navSidebarOpen = false;
+        updateNavSidebarUI();
+      });
+
+      if (!resizer || !sidebar) return;
+
+      let dragging = false;
+      let startX = 0;
+      let startW = 0;
+
+      resizer.addEventListener('pointerdown', (e) => {
+        if (e.button !== undefined && e.button !== 0) return;
+        dragging = true;
+        startX = e.clientX;
+        startW = sidebar.getBoundingClientRect().width;
+        resizer.classList.add('dragging');
+        sidebar.classList.add('is-resizing');
+        resizer.setPointerCapture(e.pointerId);
+        e.preventDefault();
+      });
+
+      resizer.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const delta = e.clientX - startX;
+        const minW = 210;
+        const maxW = Math.max(280, Math.floor(window.innerWidth * 0.65));
+        const nextW = Math.max(minW, Math.min(maxW, Math.round(startW + delta)));
+        document.documentElement.style.setProperty('--nav-sidebar-width', nextW + 'px');
+      });
+
+      function stopDrag(e) {
+        if (!dragging) return;
+        dragging = false;
+        resizer.classList.remove('dragging');
+        sidebar.classList.remove('is-resizing');
+        try { resizer.releasePointerCapture(e.pointerId); } catch (err) {}
+        const finalW = Math.round(sidebar.getBoundingClientRect().width);
+        if (finalW >= 210) {
+          try { localStorage.setItem(STORAGE_KEY, String(finalW)); } catch (err) {}
+        }
+      }
+
+      resizer.addEventListener('pointerup', stopDrag);
+      resizer.addEventListener('pointercancel', stopDrag);
+
+      resizer.addEventListener('dblclick', () => {
+        document.documentElement.style.removeProperty('--nav-sidebar-width');
+        try { localStorage.removeItem(STORAGE_KEY); } catch (err) {}
+      });
+    })();
+
+    // 10. Menu contestuale tasto destro personalizzato (Copia / Incolla)
+    (function initCustomContextMenu() {
+      const ctxMenu = document.getElementById('customContextMenu');
+      const copyBtn = document.getElementById('ctxCopyBtn');
+      const pasteBtn = document.getElementById('ctxPasteBtn');
+      if (!ctxMenu || !mainApp) return;
+
+      let savedSelectionText = '';
+      let targetInputEl = null;
+
+      function hideCtxMenu() {
+        ctxMenu.classList.remove('show');
+      }
+
+      document.addEventListener('contextmenu', (e) => {
+        if (mainApp.style.display === 'none') return;
+        e.preventDefault();
+
+        const sel = window.getSelection ? window.getSelection().toString().trim() : '';
+        const hoveredRow = e.target.closest('.list-row');
+        const hoveredChip = e.target.closest('.nav-node-chip');
+        const inputEl = e.target.closest('input[type="text"], input[type="search"], textarea');
+
+        targetInputEl = inputEl || searchInput;
+
+        if (sel) {
+          savedSelectionText = sel;
+        } else if (inputEl && inputEl.selectionStart !== inputEl.selectionEnd) {
+          savedSelectionText = inputEl.value.slice(inputEl.selectionStart, inputEl.selectionEnd);
+        } else if (hoveredRow) {
+          const idx = parseInt(hoveredRow.dataset.idx, 10);
+          const it = (!isNaN(idx) && currentShown[idx]) ? currentShown[idx] : null;
+          savedSelectionText = it
+            ? `${it.codice ? it.codice + ' - ' : ''}${it.descrizione} (${it.um || ''} € ${(it.prezzo || 0).toFixed(2).replace('.', ',')})`
+            : hoveredRow.innerText.trim();
+        } else if (hoveredChip) {
+          const lbl = hoveredChip.querySelector('.nav-node-label');
+          savedSelectionText = lbl ? lbl.textContent.trim() : hoveredChip.textContent.trim();
+        } else {
+          savedSelectionText = e.target.innerText ? e.target.innerText.trim() : '';
+        }
+
+        const menuW = 156;
+        const menuH = 84;
+        const posX = Math.min(e.clientX, window.innerWidth - menuW - 8);
+        const posY = Math.min(e.clientY, window.innerHeight - menuH - 8);
+        ctxMenu.style.left = Math.max(6, posX) + 'px';
+        ctxMenu.style.top = Math.max(6, posY) + 'px';
+        ctxMenu.classList.add('show');
+      });
+
+      copyBtn?.addEventListener('click', () => {
+        hideCtxMenu();
+        if (!savedSelectionText) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(savedSelectionText).catch(() => fallbackCopy(savedSelectionText));
+        } else {
+          fallbackCopy(savedSelectionText);
+        }
+      });
+
+      pasteBtn?.addEventListener('click', async () => {
+        hideCtxMenu();
+        const dest = targetInputEl || searchInput;
+        if (!dest) return;
+        try {
+          const clipText = await navigator.clipboard.readText();
+          if (clipText !== undefined && clipText !== null) {
+            dest.focus();
+            const start = dest.selectionStart ?? dest.value.length;
+            const end = dest.selectionEnd ?? dest.value.length;
+            dest.value = dest.value.slice(0, start) + clipText + dest.value.slice(end);
+            dest.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        } catch (err) {
+          dest.focus();
+          try { document.execCommand('paste'); } catch (e) {}
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#customContextMenu')) hideCtxMenu();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') hideCtxMenu();
+      });
+      window.addEventListener('scroll', hideCtxMenu, true);
+    })();
+
+    // Caricamento configurazione (priorità: localStorage V54 -> fallback V53..V32 -> #embeddedConfig)
+    (function initAppConfig() {
+      let loadedCfg = null;
+      try {
+        const saved = localStorage.getItem('listini_theme_v56') || localStorage.getItem('listini_theme_v55') || localStorage.getItem('listini_theme_v54') || localStorage.getItem('listini_theme_v53') || localStorage.getItem('listini_theme_v52') || localStorage.getItem('listini_theme_v51') || localStorage.getItem('listini_theme_v50') || localStorage.getItem('listini_theme_v32');
+        if (saved) loadedCfg = JSON.parse(saved);
+      } catch (e) {}
+      const mergedCfg = { ...DEFAULT_THEME, ...(loadedCfg || {}) };
+      if (isMobileDeviceViewport()) {
+        mergedCfg.rowDensity = 'min';
+      }
+      applyThemeConfig(mergedCfg, false);
+      if (isMobilePortrait()) {
+        navSidebarOpen = true;
+      } else if (isMobileLandscape()) {
+        navSidebarOpen = false;
+      }
+      updateNavSidebarUI();
+    })();
+
+    // 2.2 Caricamento parallelo all'avvio dei listini esterni attivi configurati in Opzioni
+    (async function autoLoadExternalListini() {
+      const activeSources = (externalListiniConfig || []).filter(s => s && s.active !== false && String(s.url || '').trim() !== '');
+      if (activeSources.length === 0) {
+        if (statusEl) statusEl.textContent = 'Nessun listino esterno attivo configurato. Seleziona un file dal dispositivo.';
+        return;
+      }
+
+      if (statusEl) {
+        statusEl.textContent = activeSources.length === 1
+          ? `Caricamento automatico listino (${activeSources[0].name || 'predefinito'}) in corso...`
+          : `Caricamento parallelo di ${activeSources.length} listini esterni in corso...`;
+      }
+
+      const fetchTasks = activeSources.map(async (src) => {
+        const cleanUrl = String(src.url).trim();
+        const response = await fetch(cleanUrl, { cache: 'no-cache' });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} su ${src.name || cleanUrl}`);
+        }
+        const rawText = await response.text();
+        const urlNoQuery = cleanUrl.split('?')[0].split('#')[0];
+        const rawFilename = decodeURIComponent(urlNoQuery.split('/').pop() || (src.name + '.json'));
+        const ext = (rawFilename.split('.').pop() || '').toLowerCase();
+        const kind = detectKindFromText(rawText, ext);
+        const fakeFile = { name: rawFilename, lastModified: Date.now() };
+        let parsed = null;
+        if (kind === 'json') {
+          parsed = parseJsonListino(rawText);
+        } else if (kind === 'xml') {
+          parsed = parseXmlListino(rawText);
+        } else if (kind === 'tsv') {
+          parsed = parseDelimitedText(rawText, '\t', fakeFile, null, null);
+        } else {
+          parsed = parseDelimitedText(rawText, null, fakeFile, null, null);
+        }
+        if (!parsed || !parsed.items || parsed.items.length === 0) {
+          throw new Error(`Nessuna voce valida in ${src.name || rawFilename}`);
+        }
+        return { parsed, fakeFile, src };
+      });
+
+      const results = await Promise.allSettled(fetchTasks);
+      let loadedCount = 0;
+      const errors = [];
+
+      results.forEach(res => {
+        if (res.status === 'fulfilled') {
+          const { parsed, fakeFile, src } = res.value;
+          registerParsedListino(parsed.items, fakeFile, src.name || parsed.metaName, {
+            name: src.name,
+            date: src.date,
+            color: src.color
+          });
+          loadedCount++;
+        } else {
+          errors.push(res.reason?.message || 'Errore di rete');
+        }
+      });
+
+      if (loadedCount > 0) {
+        finalizeImportedItems();
+      } else if (statusEl) {
+        statusEl.textContent = 'Caricamento automatico non riuscito (' + errors.join('; ') + '). Seleziona un file dal dispositivo.';
+      }
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</body>
+</html>
